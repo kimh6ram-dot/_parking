@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>주차하기</title>
+<meta property="og:title" content="주차하기">
+<meta property="og:description" content="한 번에 주차하세요">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="src/styles/main.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- INTRO : 비주얼(주차장 예시) → 메인 카피 → [시작하기] -->
+  <section id="screen-intro" class="screen active">
+    <div class="slot-visual"><canvas id="intro-canvas"></canvas></div>
+    <h1 class="slot-title main">한 번에 주차하세요</h1>
+    <div class="slot-actions">
+      <button id="btn-start" class="cta">시작하기</button>
+    </div>
+  </section>
+
+  <!-- 차 종류 선택 : 비주얼(선택한 차 미리보기) → 제목 → 4종 → [다음] -->
+  <section id="screen-select-type" class="screen">
+    <div class="slot-visual"><canvas id="type-preview"></canvas></div>
+    <h2 class="slot-title">차를 선택하세요</h2>
+    <div class="slot-body">
+      <div class="type-grid" id="type-grid">
+        <button class="type-btn" data-type="sedan"><canvas></canvas><span>승용차</span></button>
+        <button class="type-btn" data-type="compact"><canvas></canvas><span>소형차</span></button>
+        <button class="type-btn" data-type="truck"><canvas></canvas><span>트럭</span></button>
+        <button class="type-btn" data-type="bus"><canvas></canvas><span>버스</span></button>
+      </div>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-type-next" class="cta">다음</button>
+    </div>
+  </section>
+
+  <!-- 차 색상 선택 : 비주얼(같은 자리 미리보기, 색 즉시 반영) → 제목 → 4색 → [다음] -->
+  <section id="screen-select-color" class="screen">
+    <div class="slot-visual"><canvas id="preview-canvas"></canvas></div>
+    <h2 class="slot-title">색상을 선택하세요</h2>
+    <div class="slot-body">
+      <div class="color-list" id="color-list">
+        <button class="color-btn" data-color="blue"><span class="color-dot" style="background:#3B6FE0"></span>파랑</button>
+        <button class="color-btn" data-color="red"><span class="color-dot" style="background:#E24B4B"></span>빨강</button>
+        <button class="color-btn" data-color="yellow"><span class="color-dot" style="background:#F5C542"></span>노랑</button>
+        <button class="color-btn" data-color="white"><span class="color-dot" style="background:#FFFFFF"></span>흰색</button>
+      </div>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-color-next" class="cta">다음</button>
+    </div>
+  </section>
+
+  <!-- TUTORIAL : 비주얼(조작키) → 목표 문장 → [시작하기] -->
+  <section id="screen-tutorial" class="screen">
+    <div class="slot-visual">
+      <div class="tut-lines">
+        <p><span class="key" data-k="up">↑</span> 전진</p>
+        <p><span class="key" data-k="down">↓</span> 브레이크 / 후진</p>
+        <p><span class="key" data-k="left">←</span><span class="key" data-k="right">→</span> 핸들</p>
+      </div>
+    </div>
+    <h2 class="slot-title">빈칸에 후면으로 주차하세요</h2>
+    <div class="slot-body"></div>
+    <div class="slot-actions">
+      <button id="btn-play" class="cta">시작하기</button>
+    </div>
+  </section>
+
+  <!-- PLAY : 타이머 바 → 주차장 → (모바일) 방향 버튼 -->
+  <section id="screen-play" class="screen">
+    <div class="topbar">
+      <span id="play-status" class="status"></span>
+      <span id="timer" class="timer">00:30</span>
+      <span id="gear" class="gear">R</span>
+    </div>
+    <div id="stage">
+      <canvas id="game-canvas"></canvas>
+      <div id="hint" class="hint">방향키로 운전하세요</div>
+    </div>
+    <div id="dpad">
+      <div class="dpad-grid">
+        <button class="dpad-btn" data-dir="up" aria-label="전진">▲</button>
+        <button class="dpad-btn" data-dir="left" aria-label="핸들 왼쪽">◀</button>
+        <button class="dpad-btn" data-dir="right" aria-label="핸들 오른쪽">▶</button>
+        <button class="dpad-btn" data-dir="down" aria-label="브레이크 / 후진">▼</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT : 비주얼(최종 주차 상태) → 점수·등급·문구 → 세부 점수 → 버튼 -->
+  <section id="screen-result" class="screen scrollable">
+    <div class="slot-visual">
+      <canvas id="result-canvas"></canvas>
+      <span id="result-vehicle" class="result-vehicle"></span>
+    </div>
+    <div class="slot-title result-head">
+      <div id="result-score" class="result-score">0<span class="unit">점</span></div>
+      <div id="result-grade" class="result-grade"></div>
+      <div id="result-comment" class="result-comment"></div>
+      <div id="result-notes" class="result-notes"></div>
+    </div>
+    <div class="slot-body">
+      <div id="subscores" class="subscores"></div>
+    </div>
+    <div class="slot-actions">
+      <div class="btn-row">
+        <button id="btn-retry" class="cta">다시 하기</button>
+        <button id="btn-change-car" class="btn-secondary">차 바꾸기</button>
+      </div>
+      <button id="btn-battle-result" class="cta hidden">대결 결과 보기</button>
+      <button id="btn-challenge" class="cta">친구에게 도전장 보내기</button>
+      <div class="btn-row">
+        <button id="btn-save-img" class="btn-secondary">이미지 저장</button>
+        <button id="btn-share" class="btn-secondary">공유하기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHALLENGE (도전장 링크로 진입) : 비주얼(상대 주차 모습) → 제목 → 기록 → [도전 시작] -->
+  <section id="screen-challenge" class="screen">
+    <div class="slot-visual"><canvas id="challenge-canvas"></canvas></div>
+    <h2 class="slot-title">도전장이 도착했습니다</h2>
+    <div class="slot-body challenge-body">
+      <p id="challenge-name" class="challenge-name">친구의 후면주차 기록</p>
+      <div id="challenge-score" class="result-score">0<span class="unit">점</span></div>
+      <p class="battle-hint">이길 수 있으면 해보세요.</p>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-challenge-start" class="cta">도전 시작</button>
+    </div>
+  </section>
+
+  <!-- BATTLE RESULT : 비주얼(둘의 주차 모습) → 점수 VS 점수 → 승패 → 버튼 -->
+  <section id="screen-battle-result" class="screen scrollable">
+    <div class="slot-visual vs-visual">
+      <div class="vs-fig"><div class="vs-canvas-box"><canvas id="vs-a-canvas"></canvas></div><span id="vs-a-name" class="vs-name"></span></div>
+      <span class="vs-mid">VS</span>
+      <div class="vs-fig"><div class="vs-canvas-box"><canvas id="vs-b-canvas"></canvas></div><span id="vs-b-name" class="vs-name"></span></div>
+    </div>
+    <div class="slot-title vs-scores"><span id="vs-a-score">0</span><span class="vs-sep">VS</span><span id="vs-b-score">0</span></div>
+    <div class="slot-body">
+      <p id="vs-winner" class="vs-winner"></p>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-rematch" class="cta">다시 붙기</button>
+      <button id="btn-vs-detail" class="btn-secondary">내 결과 자세히 보기</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- 닉네임 입력 -->
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <p class="modal-title">도전장에 적을 닉네임</p>
+    <input id="modal-input" type="text" maxlength="12" placeholder="예: 주차왕">
+    <div class="btn-row">
+      <button id="modal-cancel" class="btn-secondary">취소</button>
+      <button id="modal-ok" class="cta">확인</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="src/game/config.js"></script>
+<script src="src/game/state.js"></script>
+<script src="src/game/physics.js"></script>
+<script src="src/game/sprites-data.js"></script>
+<script src="src/game/sprites.js"></script>
+<script src="src/game/renderer.js"></script>
+<script src="src/game/input.js"></script>
+<script src="src/game/scoring.js"></script>
+<script src="src/game/share.js"></script>
+<script src="src/game/battle.js"></script>
+<script src="src/game/play.js"></script>
+<script src="src/game/result-ui.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>

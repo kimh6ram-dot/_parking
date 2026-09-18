@@ -1,0 +1,390 @@
+/* 주차하기 — 흑백 미니멀 UI (MINIGAME_SYSTEM.md)
+ *
+ * ===== 공통 AppShell / 화면 레이아웃 시스템 =====
+ * 모든 화면은 같은 max-width 프레임(--app-max-width) 안에서, 같은 content-width로 정렬되고,
+ * 같은 세로 리듬(preview → title → content → CTA)으로 이어진다. 화면마다 다른 width/margin을
+ * 따로 잡지 않고 아래 토큰만 사용한다. (PLAY는 예외 — 17번 참고)
+ *
+ * ScreenShell 구조:
+ *   .screen (전체 프레임, max-width: --app-max-width)
+ *   └ .slot-visual / .slot-title / .slot-body / .slot-actions  (모두 --content-width로 정렬)
+ *
+ * 세로 리듬 (선택/설명 계열 화면 — INTRO·차량 선택·색상 선택·튜토리얼·RESULT·CHALLENGE·BATTLE):
+ *   화면 상단 --screen-top
+ *   → [PREVIEW]  --preview-width × --preview-height, 1px 검정 테두리
+ *   → --gap-preview-title
+ *   → [TITLE]    22px/800, 중앙 정렬
+ *   → --gap-title-content
+ *   → [CONTENT]  선택 카드/리스트/세부점수 등 (내용만큼만 차지 — 억지로 늘리지 않음)
+ *   → --gap-content-cta
+ *   → [CTA]      --button-height, --content-width 폭
+ *   → --screen-bottom
+ *
+ * CTA는 항상 "마지막 콘텐츠 바로 아래"에 위치한다. 금지: position:fixed, margin-top:auto,
+ * justify-content:space-between, height:100vh 안에서 위아래 강제 분리. 화면마다 별도의
+ * margin-top 매직넘버를 만들지 않는다 — 아래 토큰만 사용.
+ */
+:root {
+  --bg: #FFFFFF;
+  --text: #000000;
+  --muted: #777777;
+  --border: #000000;
+  --soft-border: #DDDDDD;
+  --disabled: #E5E5E5;
+
+  /* ---- 디자인 토큰 (화면마다 다시 정의하지 않는다) ---- */
+  --app-max-width: 430px;
+  --content-width: 320px;
+  /* PREVIEW 프레임: 모든 선택/설명 화면이 같은 폭×높이 하나를 공유한다(섹션 5).
+   * 170×106 같은 소형 아이콘 프레임 대신 --content-width와 같은 폭을 택한 이유:
+   * INTRO/RESULT/CHALLENGE/BATTLE가 "차량 1대"가 아니라 "주차장 장면(차량 3대)"을
+   * 보여줘야 해서, 차량 선택/색상 선택도 같은 프레임을 그대로 공유해야 화면이
+   * 안 끊긴다. 즉 "동일한 값 하나를 정해서 전 화면에 사용"이라는 규칙을
+   * --content-width 폭으로 만족시킨다. */
+  --preview-width: var(--content-width);
+  --preview-height: 200px;
+
+  --screen-top: 32px;
+  --screen-bottom: 28px;
+  --gap-preview-title: 22px;
+  --gap-title-content: 20px;
+  --gap-content-cta: 28px;
+
+  --button-height: 48px;
+  --button-height-secondary: 44px;
+
+  /* 차량 선택(2×2 그리드 164px)과 색상 선택(리스트 200px)은 줄 수가 달라 본문 높이가
+   * 원래 다르다 — 둘 다 이 높이로 맞추고 안에서 세로 중앙 정렬해서, 두 화면을 오갈 때
+   * CTA가 같은 y에서 움직이지 않게 한다(섹션: 2·3컷 버튼 위치 고정). */
+  --select-body-height: 200px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  font-family: "Pretendard Variable", Pretendard, -apple-system, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  position: relative;
+  width: 100%;
+  max-width: var(--app-max-width);
+  height: 100vh;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ---------- 화면 공통 ---------- */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--screen-top) 20px var(--screen-bottom);
+}
+/* 화면 전환: 슬라이드 없이 아주 짧은 fade + 4px 이동만 (섹션 29). 레이아웃 위치는 그대로 두고
+ * state.js가 진입 순간 .entering을 잠깐 붙였다 rAF에서 떼어 opacity/translateY만 애니메이션한다. */
+.screen.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity .16s ease, transform .16s ease;
+}
+.screen.active.entering { opacity: 0; transform: translateY(4px); }
+.screen.scrollable { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.hidden { display: none !important; }
+button { font-family: inherit; cursor: pointer; }
+
+/* ---------- 슬롯 ---------- */
+.slot-visual {
+  position: relative;
+  width: 100%;
+  max-width: var(--preview-width);
+  height: var(--preview-height);
+  flex-shrink: 0;
+  border: 1px solid #000000;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.slot-visual > canvas { display: block; width: 100%; height: 100%; }
+.slot-title {
+  width: 100%;
+  max-width: var(--content-width);
+  margin-top: var(--gap-preview-title);
+  min-height: 28px;
+  flex-shrink: 0;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+}
+.slot-title.main { font-size: 28px; }
+.slot-body {
+  width: 100%;
+  max-width: var(--content-width);
+  margin-top: var(--gap-title-content);
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.slot-body:empty { display: none; }
+/* 차량 선택 · 색상 선택: 본문 높이를 하나로 맞춰 CTA가 같은 y에 고정되게 한다 */
+#screen-select-type .slot-body,
+#screen-select-color .slot-body {
+  min-height: var(--select-body-height);
+}
+.slot-actions {
+  width: 100%;
+  max-width: var(--content-width);
+  margin-top: var(--gap-content-cta);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---------- INTRO · TUTORIAL 전용: 화면 상단에 고정하지 않는다 ----------
+ * 이 둘은 "고르는 화면"이 아니라 "보여주는 화면"이라 차량/색상 선택(2·3컷)과 다른 그룹으로
+ * 묶는다 — 본문(slot-body) 없이 비주얼+타이틀+CTA뿐이라는 구조도 둘이 같다.
+ * 비주얼·타이틀·CTA 사이 간격은 2·3컷과 완전히 같은 토큰을 그대로 쓴다(--preview-width/height,
+ * --gap-preview-title, --gap-content-cta, --button-height 등 — 새로 만들지 않음). 다른 점은
+ * 이 묶음 전체를 화면 상단에 고정하지 않는다는 것뿐이다.
+ * 완전한 가운데(50/50)는 아래로 처져 보인다는 피드백으로, 위:아래 여백을 1:2로 두고 묶음
+ * 전체를 화면 중앙보다 살짝 위쪽에 둔다. 4번째 컷(TUTORIAL)도 1번째 컷(INTRO)과 같은 y에
+ * 오도록 같은 규칙을 그대로 적용한다. */
+#screen-intro, #screen-tutorial { justify-content: flex-start; }
+#screen-intro::before, #screen-tutorial::before { content: ""; flex: 1 0 0; }
+#screen-intro::after, #screen-tutorial::after { content: ""; flex: 2 0 0; }
+/* INTRO 제목(.main, 28px)이 TUTORIAL 제목(22px)보다 높이가 커서, 그대로 두면 1:2 분배
+ * 결과가 화면마다 몇 px씩 어긋난다 — 두 제목의 예약 높이를 강제로 맞춰 정확히 같은 y가 되게 한다. */
+#screen-intro .slot-title, #screen-tutorial .slot-title { min-height: 37px; }
+
+/* ---------- 버튼 ---------- */
+.cta {
+  width: 100%;
+  height: var(--button-height);
+  background: #000000;
+  color: #FFFFFF;
+  border: 1px solid #000000;
+  border-radius: 2px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.cta:active { background: #FFFFFF; color: #000000; }
+.btn-secondary {
+  width: 100%;
+  height: var(--button-height-secondary);
+  background: #FFFFFF;
+  color: #000000;
+  border: 1px solid #000000;
+  border-radius: 2px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.btn-secondary:active { background: #000000; color: #FFFFFF; }
+.btn-row { display: flex; gap: 8px; width: 100%; }
+.btn-row > * { flex: 1; }
+.btn-row .cta { flex: 1.6; }
+.muted { color: var(--muted); }
+
+/* ---------- 차 종류 선택 ---------- */
+.type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+.type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 78px;
+  background: #FFFFFF;
+  color: #000000;
+  border: 1px solid #000000;
+  border-radius: 2px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.type-btn canvas { display: block; }
+.type-btn.selected { background: #000000; color: #FFFFFF; }
+
+/* ---------- 색상 선택 ---------- */
+.color-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.color-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 16px;
+  background: #FFFFFF;
+  color: #000000;
+  border: 1px solid #000000;
+  border-radius: 2px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+}
+.color-btn.selected { background: #000000; color: #FFFFFF; }
+/* 색 샘플 점 — 차량 색상(게임 오브젝트)이라 허용 */
+.color-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #000000; flex-shrink: 0; }
+.color-btn.selected .color-dot { border-color: #FFFFFF; }
+
+/* ---------- TUTORIAL (조작키 안내가 비주얼 슬롯에 들어감) ---------- */
+.tut-lines { display: flex; flex-direction: column; gap: 14px; text-align: center; }
+.tut-lines p { font-size: 20px; font-weight: 700; }
+.tut-lines .key { display: inline-block; min-width: 28px; font-weight: 800; }
+
+/* ---------- PLAY ---------- */
+#screen-play { padding: 0; align-items: stretch; }
+.topbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 18px 20px 12px; /* 화면 상단 18px → timer(30px 폰트) → 아래 12px → stage */
+  border-bottom: 1px solid var(--soft-border);
+  flex-shrink: 0;
+}
+.topbar .status { justify-self: start; font-size: 14px; font-weight: 700; color: var(--muted); }
+/* 남은 시간: 가운데, 크게 */
+.topbar .timer { justify-self: center; font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: 0.5px; font-variant-numeric: tabular-nums; }
+.topbar .timer.urgent { color: #E5262F; } /* 10초 남으면 빨강 (사용자 요청) */
+.topbar .gear {
+  justify-self: end;
+  width: 24px; height: 24px;
+  border: 1px solid #000000;
+  font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  visibility: hidden;
+}
+.topbar .gear.on { visibility: visible; background: #000000; color: #FFFFFF; }
+#stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: flex-start; /* 타이머 바로 아래에 주차장이 붙도록 */
+  justify-content: center;
+  touch-action: none;
+  padding: 12px 12px 10px;
+}
+#game-canvas { display: block; touch-action: none; }
+.hint {
+  position: absolute;
+  left: 0; right: 0; top: 0; /* top은 play.js가 주차장 높이에 맞춰 설정 */
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.hint.hidden { display: block !important; opacity: 0; }
+/* 모바일 방향 버튼: 흰 배경 / 검은 테두리 / 눌리면 검정 */
+#dpad { display: none; flex-shrink: 0; padding: 8px 0 14px; touch-action: none; justify-content: center; }
+body.touch #dpad { display: flex; }
+.dpad-grid { display: grid; grid-template-columns: 66px 66px 66px; grid-template-rows: 54px 54px 54px; gap: 6px; }
+.dpad-btn {
+  background: #FFFFFF; color: #000000;
+  border: 1px solid #000000; border-radius: 2px;
+  font-size: 20px; font-weight: 800;
+  touch-action: none; -webkit-user-select: none; user-select: none;
+}
+.dpad-btn.on { background: #000000; color: #FFFFFF; }
+.dpad-btn[data-dir="up"] { grid-column: 2; grid-row: 1; }
+.dpad-btn[data-dir="left"] { grid-column: 1; grid-row: 2; }
+.dpad-btn[data-dir="right"] { grid-column: 3; grid-row: 2; }
+.dpad-btn[data-dir="down"] { grid-column: 2; grid-row: 3; }
+
+/* ---------- RESULT : 비주얼(최종 주차) → 점수/등급/문구 → 세부 점수 2열 → 버튼 ---------- */
+.result-vehicle {
+  position: absolute; right: 6px; bottom: 5px;
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  background: rgba(255,255,255,0.85); padding: 1px 6px;
+}
+.result-head { margin-top: var(--gap-preview-title); } /* 다른 화면의 타이틀과 같은 y */
+.result-score { font-size: 50px; font-weight: 900; line-height: 1; letter-spacing: -1px; }
+.result-score .unit { font-size: 20px; font-weight: 700; margin-left: 2px; }
+.result-grade { margin-top: 6px; font-size: 20px; font-weight: 800; }
+.result-comment { margin-top: 3px; font-size: 14px; font-weight: 500; color: var(--muted); line-height: 1.4; }
+.result-notes { margin-top: 2px; font-size: 13px; font-weight: 500; color: var(--muted); line-height: 1.4; }
+.result-notes:empty { display: none; }
+.subscores { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; width: 100%; }
+.subscore-row {
+  display: flex; justify-content: space-between; align-items: center;
+  height: 32px; border-bottom: 1px solid var(--soft-border); font-size: 14px;
+}
+.subscore-row .label { color: var(--muted); font-weight: 600; }
+.subscore-row .value { font-weight: 700; font-variant-numeric: tabular-nums; }
+#screen-result .slot-body { margin-top: 12px; }
+
+/* ---------- CHALLENGE : 비주얼(상대 주차 모습) → 제목 → 기록 → [도전 시작] ---------- */
+.challenge-body { gap: 6px; text-align: center; }
+.challenge-name { font-size: 14px; font-weight: 600; color: var(--muted); }
+.battle-hint { margin-top: 4px; font-size: 16px; font-weight: 700; }
+
+/* ---------- BATTLE RESULT : 비주얼(둘의 주차 모습) → 점수 VS 점수 → 승패 → 버튼 ---------- */
+.vs-visual { gap: 8px; padding: 0 8px; }
+.vs-fig { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.vs-fig { position: relative; }
+.vs-fig .vs-canvas-box { width: 100%; aspect-ratio: 1.3 / 1; border: 1px solid var(--soft-border); }
+.vs-fig canvas { display: block; width: 100%; height: 100%; }
+.vs-name { font-size: 13px; font-weight: 600; color: var(--muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-mid { font-size: 15px; font-weight: 800; flex-shrink: 0; }
+.vs-scores { font-size: 30px; font-weight: 900; letter-spacing: -0.5px; }
+.vs-scores .vs-sep { font-size: 16px; font-weight: 800; margin: 0 10px; vertical-align: middle; }
+.vs-winner { font-size: 16px; font-weight: 700; text-align: center; }
+
+/* ---------- 모달 / 토스트 ---------- */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 20px; }
+.modal.hidden { display: none !important; }
+.modal-card { width: 100%; max-width: var(--content-width); background: #FFFFFF; border: 1px solid #000000; padding: 22px 18px; display: flex; flex-direction: column; gap: 14px; }
+.modal-title { font-size: 17px; font-weight: 800; text-align: center; }
+.modal-card input {
+  width: 100%; height: 46px; padding: 0 12px;
+  border: 1px solid #000000; border-radius: 2px;
+  font-family: inherit; font-size: 16px; font-weight: 600; color: #000000; background: #FFFFFF;
+  -webkit-user-select: text; user-select: text;
+}
+.modal-card input:focus { outline: 2px solid #000000; outline-offset: -1px; }
+.modal-card .cta, .modal-card .btn-secondary { height: 46px; }
+.toast {
+  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+  background: #000000; color: #FFFFFF; font-size: 14px; font-weight: 600;
+  padding: 10px 16px; border-radius: 2px; opacity: 0; pointer-events: none;
+  transition: opacity .2s; z-index: 30; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+
+/* ---------- 세로가 짧은 화면(예: 320×568)에서도 같은 규격을 축소해 한 화면에 ---------- */
+@media (max-height: 640px) {
+  :root { --preview-height: 150px; --screen-top: 16px; --screen-bottom: 20px; --gap-preview-title: 12px; --gap-title-content: 12px; --gap-content-cta: 20px; --button-height: 42px; --button-height-secondary: 40px; --select-body-height: 184px; }
+  .slot-title.main { font-size: 24px; }
+  .slot-actions { gap: 6px; }
+  .type-btn { height: 64px; }
+  .color-btn { height: 40px; }
+  .result-score { font-size: 42px; }
+  .result-grade { font-size: 18px; margin-top: 4px; }
+  .subscore-row { height: 28px; font-size: 13px; }
+  .tut-lines { gap: 8px; }
+  .tut-lines p { font-size: 18px; }
+}
