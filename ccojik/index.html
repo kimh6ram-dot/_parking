@@ -182,7 +182,7 @@
 
   <script src="../analytics.js"></script>
   <script>
-    const sites = [
+    const baseSites = [
       {id:'parking', name:'주차 게임', icon:'🚗', url:'https://kimh6ram-dot.github.io/_parking/'},
       {id:'clown-sim', name:'삐연시', icon:'🤡', url:'https://tmfdl951-source.github.io/ccojik/clown-sim/'},
       {id:'toothpaste-poop', name:'치약 똥 만들기', icon:'🪥', url:'https://kimh6ram-dot.github.io/toothpaste-poop/'},
@@ -199,6 +199,8 @@
       {id:'kaltoe', name:'칼퇴 게임', icon:'🏃', url:'https://tmfdl951-source.github.io/ccojik/kaltoe/'},
       {id:'will-you-date-me', name:'나랑 데이트 할래?', icon:'🌷', url:'https://kimh6ram-dot.github.io/will-you-date-me/'}
     ];
+
+    let sites=[...baseSites];
 
     const grid=document.getElementById('grid');
     const search=document.getElementById('search');
@@ -221,10 +223,12 @@
       empty.style.display=list.length?'none':'block';
     }
 
-    search.addEventListener('input',()=>{
+    function applySearch(){
       const q=search.value.trim().toLowerCase();
       render(q?sites.filter(s=>s.name.toLowerCase().includes(q)):sites);
-    });
+    }
+
+    search.addEventListener('input',applySearch);
 
     document.addEventListener('click',e=>{
       const card=e.target.closest('.card');
@@ -232,7 +236,170 @@
       window.SiteAnalytics.track('open_'+card.dataset.id);
     });
 
+    function slugToName(slug){
+      return slug
+        .replace(/^_+/,'')
+        .split(/[-_]+/)
+        .filter(Boolean)
+        .map(v=>v.charAt(0).toUpperCase()+v.slice(1))
+        .join(' ');
+    }
+
+    function cleanTitle(value){
+      if(!value)return '';
+      return value
+        .replace(/<[^>]+>/g,'')
+        .replace(/&amp;/g,'&')
+        .replace(/&lt;/g,'<')
+        .replace(/&gt;/g,'>')
+        .replace(/&#39;/g,"'")
+        .replace(/&quot;/g,'"')
+        .replace(/\[꼬직\]/g,'')
+        .replace(/CCOJIK/gi,'')
+        .replace(/꼬직/g,'')
+        .replace(/\s*[|｜·•–—-]\s*(게임|Game|Web|웹게임).*$/i,'')
+        .trim();
+    }
+
+    function decodeBase64Utf8(value){
+      const binary=atob((value||'').replace(/\n/g,''));
+      const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+      return new TextDecoder('utf-8').decode(bytes);
+    }
+
+    async function fetchIndexTitle(apiUrl){
+      try{
+        const res=await fetch(apiUrl,{headers:{Accept:'application/vnd.github+json'}});
+        if(!res.ok)return null;
+        const file=await res.json();
+        if(!file||!file.content)return null;
+        const html=decodeBase64Utf8(file.content);
+        const match=html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+        const title=cleanTitle(match&&match[1]);
+        return title||null;
+      }catch(_){
+        return null;
+      }
+    }
+
+    async function discoverKimGames(){
+      const known=new Set([
+        '_parking','toothpaste-poop','will-you-marry-me','will-you-come',
+        'cutoff-calculator','cyber-lie-detector','will-you-date-me'
+      ]);
+      const ignored=new Set(['kimharam']);
+
+      try{
+        const res=await fetch('https://api.github.com/users/kimh6ram-dot/repos?per_page=100&type=owner&sort=created&direction=desc',{
+          headers:{Accept:'application/vnd.github+json'}
+        });
+        if(!res.ok)return [];
+        const repos=await res.json();
+        const candidates=repos.filter(repo=>
+          repo &&
+          !repo.fork &&
+          repo.has_pages===true &&
+          !known.has(repo.name) &&
+          !ignored.has(repo.name)
+        );
+
+        return Promise.all(candidates.map(async repo=>{
+          const ref=encodeURIComponent(repo.default_branch||'main');
+          const api='https://api.github.com/repos/kimh6ram-dot/'+encodeURIComponent(repo.name)+'/contents/index.html?ref='+ref;
+          const pageTitle=await fetchIndexTitle(api);
+          return {
+            id:repo.name,
+            name:pageTitle||cleanTitle(repo.description)||slugToName(repo.name),
+            icon:'🎮',
+            url:'https://kimh6ram-dot.github.io/'+repo.name+'/',
+            discoveredAt:repo.created_at||repo.pushed_at||''
+          };
+        }));
+      }catch(_){
+        return [];
+      }
+    }
+
+    async function discoverTmfGames(){
+      const known=new Set([
+        'clown-sim','deco-cake','hint-draw','montage',
+        'draw-celeb','blind-draw','food','kaltoe'
+      ]);
+      const ignored=new Set(['assets','film-master']);
+
+      try{
+        const res=await fetch('https://api.github.com/repos/tmfdl951-source/ccojik/contents?ref=master',{
+          headers:{Accept:'application/vnd.github+json'}
+        });
+        if(!res.ok)return [];
+        const entries=await res.json();
+        const candidates=entries.filter(item=>
+          item &&
+          item.type==='dir' &&
+          !known.has(item.name) &&
+          !ignored.has(item.name)
+        );
+
+        const checked=await Promise.all(candidates.map(async item=>{
+          const path=encodeURIComponent(item.name);
+          const indexApi='https://api.github.com/repos/tmfdl951-source/ccojik/contents/'+path+'/index.html?ref=master';
+          const title=await fetchIndexTitle(indexApi);
+          if(!title)return null;
+
+          let discoveredAt='';
+          try{
+            const commitRes=await fetch('https://api.github.com/repos/tmfdl951-source/ccojik/commits?path='+path+'&per_page=1',{
+              headers:{Accept:'application/vnd.github+json'}
+            });
+            if(commitRes.ok){
+              const commits=await commitRes.json();
+              discoveredAt=
+                commits?.[0]?.commit?.author?.date ||
+                commits?.[0]?.commit?.committer?.date ||
+                '';
+            }
+          }catch(_){}
+
+          return {
+            id:item.name,
+            name:title||slugToName(item.name),
+            icon:'🎮',
+            url:'https://tmfdl951-source.github.io/ccojik/'+item.name+'/',
+            discoveredAt
+          };
+        }));
+
+        return checked.filter(Boolean);
+      }catch(_){
+        return [];
+      }
+    }
+
+    async function syncNewGames(){
+      try{
+        const [kimGames,tmfGames]=await Promise.all([
+          discoverKimGames(),
+          discoverTmfGames()
+        ]);
+
+        const newGames=[...kimGames,...tmfGames]
+          .filter((game,index,array)=>array.findIndex(v=>v.url===game.url)===index)
+          .sort((a,b)=>{
+            const aTime=Date.parse(a.discoveredAt||0)||0;
+            const bTime=Date.parse(b.discoveredAt||0)||0;
+            return bTime-aTime;
+          });
+
+        sites=[...newGames,...baseSites];
+        applySearch();
+      }catch(_){
+        sites=[...baseSites];
+        applySearch();
+      }
+    }
+
     render(sites);
+    syncNewGames();
   </script>
 </body>
 </html>
