@@ -166,7 +166,7 @@
       .tools{flex-direction:column;align-items:stretch}
       .search{width:100%}
       .count{align-self:flex-start}
-      .grid{grid-template-columns:1fr}
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
       .card{min-height:132px}
       .name{font-size:20px;max-width:78%}
       .icon{font-size:28px}
@@ -180,16 +180,20 @@
       <p class="desc">Things we made for fun.</p>
     </header>
 
+
     <div class="tools">
       <input id="search" class="search" type="search" placeholder="사이트 이름 검색" autocomplete="off">
       <div class="count" id="count"></div>
     </div>
 
+
     <main class="grid" id="grid"></main>
     <div class="empty" id="empty">검색 결과가 없습니다.</div>
 
+
     <footer>CONTECT ziksunmedia@gmail.com</footer>
   </div>
+
 
   <script src="../analytics.js"></script>
   <script>
@@ -212,12 +216,15 @@
       {id:'will-you-date-me', name:'나랑 데이트 할래?', iconIndex:14, url:'https://kimh6ram-dot.github.io/will-you-date-me/'}
     ];
 
+
     let sites=[...baseSites];
+
 
     const grid=document.getElementById('grid');
     const search=document.getElementById('search');
     const count=document.getElementById('count');
     const empty=document.getElementById('empty');
+
 
     function render(list){
       grid.innerHTML=list.map((s)=>{
@@ -230,7 +237,7 @@
         return `
           <a class="card" href="${s.url}" target="_blank" rel="noopener" data-id="${s.id}">
             <div class="index">${String(idx).padStart(2,'0')}</div>
-            ${idx===1?'<div class="new-badge">NEW!</div>':''}
+            ${idx<=2?'<div class="new-badge">NEW!</div>':''}
             <div class="name">${s.name}</div>
             ${iconHtml}
           </a>
@@ -240,18 +247,22 @@
       empty.style.display=list.length?'none':'block';
     }
 
+
     function applySearch(){
       const q=search.value.trim().toLowerCase();
       render(q?sites.filter(s=>s.name.toLowerCase().includes(q)):sites);
     }
 
+
     search.addEventListener('input',applySearch);
+
 
     document.addEventListener('click',e=>{
       const card=e.target.closest('.card');
       if(!card||!window.SiteAnalytics)return;
       window.SiteAnalytics.track('open_'+card.dataset.id);
     });
+
 
     function slugToName(slug){
       return slug
@@ -261,6 +272,7 @@
         .map(v=>v.charAt(0).toUpperCase()+v.slice(1))
         .join(' ');
     }
+
 
     function cleanTitle(value){
       if(!value)return '';
@@ -278,11 +290,13 @@
         .trim();
     }
 
+
     function decodeBase64Utf8(value){
       const binary=atob((value||'').replace(/\n/g,''));
       const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
       return new TextDecoder('utf-8').decode(bytes);
     }
+
 
     async function fetchIndexTitle(apiUrl){
       try{
@@ -299,12 +313,14 @@
       }
     }
 
+
     async function discoverKimGames(){
       const known=new Set([
         '_parking','toothpaste-poop','will-you-marry-me','will-you-come',
         'cutoff-calculator','cyber-lie-detector','will-you-date-me'
       ]);
       const ignored=new Set(['kimharam']);
+
 
       try{
         const res=await fetch('https://api.github.com/users/kimh6ram-dot/repos?per_page=100&type=owner&sort=created&direction=desc',{
@@ -319,6 +335,7 @@
           !known.has(repo.name) &&
           !ignored.has(repo.name)
         );
+
 
         return Promise.all(candidates.map(async repo=>{
           const ref=encodeURIComponent(repo.default_branch||'main');
@@ -337,12 +354,14 @@
       }
     }
 
+
     async function discoverTmfGames(){
       const known=new Set([
         'film-master','clown-sim','deco-cake','hint-draw','montage',
         'draw-celeb','blind-draw','food','kaltoe'
       ]);
       const ignored=new Set(['assets','tongue-clean']);
+
 
       try{
         const res=await fetch('https://api.github.com/repos/tmfdl951-source/ccojik/contents?ref=master',{
@@ -357,11 +376,13 @@
           !ignored.has(item.name)
         );
 
+
         const checked=await Promise.all(candidates.map(async item=>{
           const path=encodeURIComponent(item.name);
           const indexApi='https://api.github.com/repos/tmfdl951-source/ccojik/contents/'+path+'/index.html?ref=master';
           const title=await fetchIndexTitle(indexApi);
           if(!title)return null;
+
 
           let discoveredAt='';
           try{
@@ -377,6 +398,7 @@
             }
           }catch(_){}
 
+
           return {
             id:item.name,
             name:title||slugToName(item.name),
@@ -386,11 +408,13 @@
           };
         }));
 
+
         return checked.filter(Boolean);
       }catch(_){
         return [];
       }
     }
+
 
     async function syncNewGames(){
       try{
@@ -398,6 +422,7 @@
           discoverKimGames(),
           discoverTmfGames()
         ]);
+
 
         const newGames=[...kimGames,...tmfGames]
           .filter((game,index,array)=>array.findIndex(v=>v.url===game.url)===index)
@@ -407,6 +432,7 @@
             return bTime-aTime;
           });
 
+
         sites=[...newGames,...baseSites];
         applySearch();
       }catch(_){
@@ -414,6 +440,7 @@
         applySearch();
       }
     }
+
 
     render(sites);
     syncNewGames();
