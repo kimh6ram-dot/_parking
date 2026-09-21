@@ -96,21 +96,21 @@
   const PREFIX = 'kimh6ram-20260921-';
 
   const projects = [
-    {id:'_parking', label:'주차하기', maker:'하람', created:'2026-09-18T09:13:41Z', owner:'kimh6ram-dot', repo:'_parking', funnel:'parking'},
+    {id:'_parking', label:'주차 게임', maker:'하람', created:'2026-09-18T09:13:41Z', owner:'kimh6ram-dot', repo:'_parking', funnel:'parking'},
     {id:'ccojik-clown-sim', label:'삐연시', maker:'이슬', created:'2026-09-14T08:43:56Z', owner:'tmfdl951-source', repo:'ccojik', path:'clown-sim', funnel:'generic'},
-    {id:'toothpaste-poop', label:'치약똥 챌린지', maker:'하람', created:'2026-09-01T09:20:40Z', owner:'kimh6ram-dot', repo:'toothpaste-poop'},
-    {id:'ccojik-deco-cake', label:'10초 케이크 데코', maker:'이슬', created:'2026-08-27T04:01:55Z', owner:'tmfdl951-source', repo:'ccojik', path:'deco-cake', funnel:'generic'},
-    {id:'will-you-marry-me', label:'최애와 결혼합니다 💍', maker:'하람', created:'2026-08-24T08:56:08Z', owner:'kimh6ram-dot', repo:'will-you-marry-me'},
-    {id:'ccojik-hint-draw', label:'특징만 보고 그리기', maker:'이슬', created:'2026-08-21T06:34:20Z', owner:'tmfdl951-source', repo:'ccojik', path:'hint-draw', funnel:'generic'},
-    {id:'ccojik-montage', label:'이거 누구게? · 몽타주 만들기', maker:'이슬', created:'2026-08-04T06:59:41Z', owner:'tmfdl951-source', repo:'ccojik', path:'montage', funnel:'generic'},
-    {id:'will-you-come', label:'🎂 생일파티 초대장', maker:'하람', created:'2026-08-03T07:40:05Z', owner:'kimh6ram-dot', repo:'will-you-come'},
-    {id:'ccojik-draw-celeb', label:'연예인 따라그리기', maker:'이슬', created:'2026-07-29T07:05:57Z', owner:'tmfdl951-source', repo:'ccojik', path:'draw-celeb', funnel:'generic'},
-    {id:'cutoff-calculator', label:'손절 계산기', maker:'하람', created:'2026-07-28T07:56:33Z', owner:'kimh6ram-dot', repo:'cutoff-calculator'},
-    {id:'ccojik-blind-draw', label:'눈 감고 그리기', maker:'이슬', created:'2026-07-27T08:24:31Z', owner:'tmfdl951-source', repo:'ccojik', path:'blind-draw', funnel:'generic'},
-    {id:'ccojik-food', label:'오늘 뭐 먹지? · 결정장애 해결소', maker:'이슬', created:'2026-07-23T07:35:14Z', owner:'tmfdl951-source', repo:'ccojik', path:'food', funnel:'generic'},
+    {id:'toothpaste-poop', label:'치약 똥 만들기', maker:'하람', created:'2026-09-01T09:20:40Z', owner:'kimh6ram-dot', repo:'toothpaste-poop'},
+    {id:'ccojik-deco-cake', label:'케이크 만들기', maker:'이슬', created:'2026-08-27T04:01:55Z', owner:'tmfdl951-source', repo:'ccojik', path:'deco-cake', funnel:'generic'},
+    {id:'will-you-marry-me', label:'최애와 청첩장 만들기', maker:'하람', created:'2026-08-24T08:56:08Z', owner:'kimh6ram-dot', repo:'will-you-marry-me'},
+    {id:'ccojik-hint-draw', label:'특징 듣고 그리기', maker:'이슬', created:'2026-08-21T06:34:20Z', owner:'tmfdl951-source', repo:'ccojik', path:'hint-draw', funnel:'generic'},
+    {id:'ccojik-montage', label:'몽타주 만들기', maker:'이슬', created:'2026-08-04T06:59:41Z', owner:'tmfdl951-source', repo:'ccojik', path:'montage', funnel:'generic'},
+    {id:'will-you-come', label:'🎂 생일 초대장', maker:'하람', created:'2026-08-03T07:40:05Z', owner:'kimh6ram-dot', repo:'will-you-come'},
+    {id:'ccojik-draw-celeb', label:'연예인 그리기', maker:'이슬', created:'2026-07-29T07:05:57Z', owner:'tmfdl951-source', repo:'ccojik', path:'draw-celeb', funnel:'generic'},
+    {id:'cutoff-calculator', label:'손절계산기', maker:'하람', created:'2026-07-28T07:56:33Z', owner:'kimh6ram-dot', repo:'cutoff-calculator'},
+    {id:'ccojik-blind-draw', label:'눈감고 그리기', maker:'이슬', created:'2026-07-27T08:24:31Z', owner:'tmfdl951-source', repo:'ccojik', path:'blind-draw', funnel:'generic'},
+    {id:'ccojik-food', label:'오늘 뭐먹지?', maker:'이슬', created:'2026-07-23T07:35:14Z', owner:'tmfdl951-source', repo:'ccojik', path:'food', funnel:'generic'},
     {id:'cyber-lie-detector', label:'사이버 거짓말 탐지기', maker:'하람', created:'2026-07-22T05:48:18Z', owner:'kimh6ram-dot', repo:'cyber-lie-detector'},
-    {id:'ccojik-kaltoe', label:'칼퇴 챌린지', maker:'이슬', created:'2026-07-10T09:03:59Z', owner:'tmfdl951-source', repo:'ccojik', path:'kaltoe', funnel:'generic'},
-    {id:'will-you-date-me', label:'나랑 데이트 할래? 🌸', maker:'하람', created:'2026-06-12T04:07:32Z', owner:'kimh6ram-dot', repo:'will-you-date-me'}
+    {id:'ccojik-kaltoe', label:'칼퇴 게임', maker:'이슬', created:'2026-07-10T09:03:59Z', owner:'tmfdl951-source', repo:'ccojik', path:'kaltoe', funnel:'generic'},
+    {id:'will-you-date-me', label:'나랑 데이트 할래?', maker:'하람', created:'2026-06-12T04:07:32Z', owner:'kimh6ram-dot', repo:'will-you-date-me'}
   ].sort((a,b)=>new Date(b.created)-new Date(a.created));
 
   const nf = new Intl.NumberFormat('ko-KR');
