@@ -1,4 +1,4 @@
-/* 주차하기 — 렌더러 (단순 2D 탑뷰 차량 실루엣 4종 · 주차장 · 스냅샷)
+/* 주차하기 — 렌더러 (단순 2D 탑뷰 차량 실루엣 6종 · 주차장 · 스냅샷)
  * 차량 로컬 좌표: +x = 앞, +y = 오른쪽. 중심 (0,0). */
 (function () {
   'use strict';
@@ -32,6 +32,7 @@
   }
 
   function wheelSpecs(v) {
+    if (v.twoWheel) return []; // 2륜은 그림 자체에 앞뒤 바퀴가 있다 (자동차식 4륜 사각형을 덧그리지 않는다)
     const hl = v.length / 2, hw = v.width / 2;
     const rearAxle = -hl + v.rearOverhang;
     const frontAxle = rearAxle + v.wheelBase;
@@ -78,6 +79,22 @@
     ctx.fillRect(x, yIn, rw, rh); ctx.strokeRect(x, yIn, rw, rh);
   }
 
+  /* 2륜(오토바이·자전거) 벡터 대체 그림 — 스프라이트가 로드되기 전에만 잠깐 쓰인다.
+   * 로컬 좌표: +x = 앞. 앞·뒤 바퀴 + 몸통 + 핸들 막대. */
+  function drawTwoWheelFallback(ctx, v, body, lw) {
+    const L = v.length, W = v.width, hl = L / 2;
+    const tl = L * 0.17, tw = W * 0.2;
+    ctx.lineWidth = lw;
+    ctx.strokeStyle = C.outline;
+    ctx.fillStyle = C.wheel;
+    [hl - tl / 2, -hl + tl / 2].forEach(x => { ctx.fillRect(x - tl / 2, -tw / 2, tl, tw); });
+    ctx.fillStyle = body;
+    rrect(ctx, -hl + tl, -W * 0.16, L - tl * 2, W * 0.32, W * 0.1);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C.wheel;
+    ctx.fillRect(hl - L * 0.28, -W / 2, L * 0.05, W);
+  }
+
   /* 차량 1대. ctx는 이미 중심·heading으로 변환된 상태.
    * opts: { body, glass, steer, reversing, lw } */
   function drawVehicle(ctx, v, opts) {
@@ -106,9 +123,11 @@
       ctx.scale(s, s);
       ctx.drawImage(sp, -(meta.bbox.x + meta.bbox.w / 2), -(meta.bbox.y + meta.bbox.h / 2));
       ctx.restore();
-      if (opts.reversing) drawReverseLights(ctx, v, lw);
+      if (opts.reversing && !v.twoWheel) drawReverseLights(ctx, v, lw);
       return;
     }
+
+    if (v.twoWheel) { drawTwoWheelFallback(ctx, v, body, lw); return; }
 
     ctx.fillStyle = body;
     if (v.id === 'sedan') {
@@ -209,18 +228,19 @@
     ctx.strokeStyle = C.bayLine;
     ctx.lineWidth = lw * 2;
     ctx.beginPath();
-    for (let i = 0; i <= 3; i++) {
+    for (let i = 0; i <= bays.length; i++) {
       const x = bays[0].x + i * bays[0].w;
       ctx.moveTo(x, top);
       ctx.lineTo(x, top + bays[0].h);
     }
     ctx.stroke();
     // 연석(뒤 벽)
+    const lastBay = bays[bays.length - 1];
     ctx.strokeStyle = C.curb;
     ctx.lineWidth = lw * 3;
     ctx.beginPath();
     ctx.moveTo(bays[0].x - lw, top);
-    ctx.lineTo(bays[2].x + bays[2].w + lw, top);
+    ctx.lineTo(lastBay.x + lastBay.w + lw, top);
     ctx.stroke();
     // 주차장 외곽
     ctx.strokeStyle = C.lotBorder;
@@ -295,7 +315,9 @@
   function snapshot(layout, car, colorHex, px, aspect) {
     aspect = aspect || 1;
     const pad = 22;
-    const b0 = layout.bays[0], b2 = layout.bays[2];
+    // 목표 칸 양옆으로 viewSide칸까지 (자동차는 3칸 전체, 칸이 좁은 2륜은 5칸) — 칸이 7개여도 차가 작아 보이지 않게
+    const nb = layout.bays.length, ti = layout.targetIndex;
+    const b0 = layout.bays[Math.max(0, ti - layout.viewSide)], b2 = layout.bays[Math.min(nb - 1, ti + layout.viewSide)];
     let x0 = b0.x - pad, y0 = layout.top - pad;
     let x1 = b2.x + b2.w + pad, y1 = layout.top + b0.h + pad * 1.6;
     if (car) {

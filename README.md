@@ -11,7 +11,7 @@
 
 ## 화면 흐름
 
-INTRO → 차 종류 선택(승용차·소형차·트럭·버스) → 차 색상 선택(파랑·빨강·노랑·흰색) → TUTORIAL → PLAY(30초) → RESULT
+INTRO → 차 종류 선택(승용차·소형차·트럭·버스·오토바이·자전거) → 차 색상 선택(파랑·빨강·노랑·흰색) → TUTORIAL → PLAY(30초) → RESULT
 (도전장으로 진입하면 CHALLENGE → … → RESULT → 대결 결과)
 
 ## 구조
@@ -19,7 +19,7 @@ INTRO → 차 종류 선택(승용차·소형차·트럭·버스) → 차 색상
 ```
 index.html
 src/main.js               화면 흐름·버튼 연결
-src/game/config.js        차량 4종 제원(크기·wheelBase·조향·속도), 색상, 주차장 레이아웃, 물리 상수, 배점, 등급
+src/game/config.js        차량 6종 제원(크기·wheelBase·조향·속도), 색상, 주차장 레이아웃(칸 수 포함), 물리 상수, 배점, 등급
 src/game/physics.js       bicycle model(speed·heading·steer·wheelBase) + 조향/가속 easing + OBB(SAT) 충돌
 src/game/sprites.js       에셋 스프라이트 로드 + 차체 착색
 src/game/sprites-data.js  assets/*.png 내장 데이터(자동 생성)
@@ -97,16 +97,28 @@ src/styles/main.css       흑백 UI
 
 ## 차량 에셋 (assets/*.png)
 
-- `assets/승용차.png · 소형차.png · 트럭.png · 버스.png` — 흰 차체 픽셀아트 탑뷰(투명 배경). 승용차·소형차·버스는 앞(헤드라이트)이 위, 트럭은 앞이 오른쪽. 방향이 바뀌면 `tools/build-sprites.js`의 SPRITES 목록에서 `front`(up/right)를 고친다
+- `assets/승용차.png · 소형차.png · 트럭.png · 버스.png · 오토바이.png · 자전거.png` — 흰 차체 픽셀아트 탑뷰(투명 배경). 트럭만 앞이 오른쪽이고 나머지 5종은 앞(헤드라이트·핸들)이 위. 방향이 바뀌면 `tools/build-sprites.js`의 SPRITES 목록에서 `front`(up/right)를 고친다. **새 차종을 추가할 때** SPRITES 목록에 한 줄 + `config.js`의 `PK.VEHICLES`/`VEHICLE_ORDER` + `index.html`의 `.type-btn` 한 줄이 필요하다
 - 실행 시 `src/game/sprites.js`가 밝은 무채색 픽셀(최소 채널 120 이상, 차체·범퍼·이음선)을 선택 색으로 착색한다. 밝기 비율을 유지해 트림은 같은 색의 어두운 톤이 되고, 외곽선·유리·헤드라이트·테일램프·순백(번호판·반짝임·미러)은 그대로. 이웃 차량은 연회색으로 착색
-- `index.html`을 file://로 열어도 캔버스 오염 없이 착색·이미지 저장이 되도록, PNG는 `src/game/sprites-data.js`에 base64로 내장돼 있다(여백 제거 + 2배 축소, 약 660KB)
+- `index.html`을 file://로 열어도 캔버스 오염 없이 착색·이미지 저장이 되도록, PNG는 `src/game/sprites-data.js`에 base64로 내장돼 있다(여백 제거 + 2배 축소, 6종 약 840KB)
 - **PNG를 바꾸면** `node tools/build-sprites.js` 를 한 번 실행해 내장 파일을 다시 만든다(외부 패키지 불필요). `--analyze`를 붙이면 바운딩박스·색 분포만 출력
 - 차량 폭(`config.js`의 `width`)은 스프라이트 실측 비율에 맞춰 두었다. 길이만 바꾸면 그림 비율이 따라가고, 충돌 박스는 폭×길이 사각형
 - 스프라이트가 없거나 로드 전이면 `renderer.js`의 벡터 실루엣으로 대신 그린다
 
+## 오토바이 · 자전거 (2륜, 2026-09-21 추가)
+
+자동차 4종과 같은 물리(bicycle model)·채점·도전장을 그대로 쓰고, 2륜이라 달라지는 부분만 차종 속성으로 처리한다.
+
+- **주차칸이 좁아서 목표 칸 양옆에 이웃 칸을 3개씩**(`sideBays: 3` → 칸 7개, 자동차는 기본 1 → 3칸). 이웃 오토바이/자전거는 모두 충돌 대상이다. `buildLayout()`이 `bays`·`targetIndex`·`neighbors`를 칸 수에 맞춰 만들고, 주차선·연석 그리기는 `bays.length` 기준이다
+- **결과·공유·도전장 그림은 목표 칸 양옆 `viewSide: 2`칸 + 여백까지**(칸이 7개여도 차가 작아 보이지 않게). 자동차는 기본 1 = 3칸 전체 (`renderer.snapshot`)
+- **충돌 박스 폭 = 핸들 끝까지 포함한 실루엣 폭**(오토바이 16 / 자전거 16, 길이 대비 0.38 / 0.45). 몸통 폭만 쓰면 옆 칸 이웃의 핸들과 그림이 겹쳐 보여서다. 자동차는 종전대로 몸통 폭(사이드미러 제외)
+- **`twoWheel: true`**: 자동차식 4륜 바퀴 사각형과 후진등을 그리지 않는다 (그림에 앞뒤 바퀴가 이미 있음). 그림이 로드되기 전에는 `drawTwoWheelFallback`의 단순 벡터로 대신 그린다. 앞바퀴만 따로 꺾이는 표시는 없다 — 방향은 차체 회전으로 보인다
+- `wheelBase`는 그림의 앞뒤 바퀴 축 간격 실측 비율(길이의 0.81 / 0.78). 최대 조향 회전 반경은 오토바이 47 · 자전거 36 (소형차 50)
+- 착색은 자동차와 같은 규칙이라 **밝은 무채색 부분만** 색이 바뀐다. 오토바이는 차체·시트, 자전거는 프레임·페달·핸들 파이프 정도이고 타이어는 그대로 검정이다
+- 차종 선택 화면은 **3열 × 2행**(행 수가 4종 때와 같은 164px)이라 색상 화면과 [다음] 버튼 y가 그대로 같다. 아이콘 캔버스 폭은 버튼 폭에서 계산한다(`drawTypeIcons`). 선택된 버튼은 검정 배경이라 검은 그림(자전거)이 묻히지 않도록 아이콘에만 흰 바탕을 깐다
+
 ## 튜닝 포인트 (config.js)
 
-- `PK.VEHICLES.*` : 차량별 `maxSteer`(최대 조향각), `steerTime`(0→최대 시간), `maxFwd/maxRev`, `accel`, `worldScale`(주차장 크기), `startRel`(시작 위치)
+- `PK.VEHICLES.*` : 차량별 `maxSteer`(최대 조향각), `steerTime`(0→최대 시간), `maxFwd/maxRev`, `accel`, `worldScale`(주차장 크기), `startRel`(시작 위치), `sideBays`(한쪽 이웃 칸 수)·`viewSide`(결과 그림에 보일 이웃 칸 수)·`twoWheel`
 - `PK.PHYSICS.rollDecel` : 키를 뗐을 때 굴러가는 정도
 - `PK.PLAY.stillHold` : 주차칸 안에서 정차 후 자동 완료까지의 시간
 - `PK.PARKING_MODES.reverse.bayWidthRatio / bayLengthRatio` : 주차칸 여유

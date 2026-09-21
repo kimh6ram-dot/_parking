@@ -12,6 +12,8 @@ const SPRITES = [
   { id: 'compact', file: '소형차.png', front: 'up' },
   { id: 'truck',   file: '트럭.png',   front: 'right' },
   { id: 'bus',     file: '버스.png',   front: 'up' },
+  { id: 'moto',    file: '오토바이.png', front: 'up' },
+  { id: 'bike',    file: '자전거.png',   front: 'up' },
 ];
 const ALPHA_MIN = 24;
 

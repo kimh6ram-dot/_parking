@@ -1,4 +1,4 @@
-/* 주차하기 — 설정 (차량 4종 · 색상 4종 · 주차장 레이아웃 · 물리 상수)
+/* 주차하기 — 설정 (차량 6종 · 색상 4종 · 주차장 레이아웃 · 물리 상수)
  * 모든 길이 단위는 "월드 유닛". 렌더러가 스테이지 크기에 맞춰 배율을 정한다. */
 (function () {
   'use strict';
@@ -42,8 +42,28 @@
       worldScale: 1.25,
       startRel: { x: 0.26, y: 0.62 }, // 회전 반경이 커서 조금 더 아래·왼쪽에서 출발
     },
+    /* 2륜: 그림(앞바퀴~뒷바퀴)이 차체 전체라 wheelBase가 길이의 0.8 이상이고, 폭은 핸들 끝까지 포함한
+     * 실루엣 폭이다(몸통 폭만 쓰면 옆 칸 이웃의 핸들과 그림이 겹쳐 보임).
+     * twoWheel: 자동차식 4륜 바퀴 사각형·후진등을 그리지 않는다.
+     * sideBays: 주차칸이 좁아서 목표 칸 양옆에 이웃 칸을 이 개수씩 둔다. viewSide: 결과 그림에 보여줄 이웃 칸 수. */
+    moto: {
+      id: 'moto', label: '오토바이', twoWheel: true,
+      width: 16, length: 42, wheelBase: 34, rearOverhang: 3, // 폭 = assets/오토바이.png 실루엣 비율(0.38)
+      maxSteer: 36 * Math.PI / 180, steerTime: 0.26, returnTime: 0.24,
+      maxFwd: 74, maxRev: 58, accel: 125, revAccel: 100, brake: 225,
+      worldScale: 0.85, sideBays: 3, viewSide: 2,
+      startRel: { x: 0.29, y: 0.48 },
+    },
+    bike: {
+      id: 'bike', label: '자전거', twoWheel: true,
+      width: 16, length: 36, wheelBase: 28, rearOverhang: 4, // 폭 = assets/자전거.png 실루엣 비율(0.45)
+      maxSteer: 38 * Math.PI / 180, steerTime: 0.24, returnTime: 0.22,
+      maxFwd: 56, maxRev: 44, accel: 80, revAccel: 66, brake: 160,
+      worldScale: 0.85, sideBays: 3, viewSide: 2,
+      startRel: { x: 0.29, y: 0.48 },
+    },
   };
-  PK.VEHICLE_ORDER = ['sedan', 'compact', 'truck', 'bus'];
+  PK.VEHICLE_ORDER = ['sedan', 'compact', 'truck', 'bus', 'moto', 'bike'];
 
   /* ---------- 차량 색상 4종 (게임 오브젝트에만 사용, UI에는 절대 사용하지 않음) ---------- */
   PK.COLORS = {
@@ -147,13 +167,17 @@
     const bayW = Math.round(vehicle.width * mode.bayWidthRatio);
     const bayL = Math.round(vehicle.length * mode.bayLengthRatio);
     const top = PK.WORLD.topMargin;
-    const left = Math.round(W / 2 - bayW * 1.5);
-    const bays = [0, 1, 2].map(i => ({
+    // 목표 칸 양옆에 이웃 칸을 side개씩 (자동차 1개, 폭이 좁은 2륜은 여러 개) — 칸 수 = side*2 + 1
+    const side = vehicle.sideBays || 1;
+    const count = side * 2 + 1;
+    const left = Math.round(W / 2 - bayW * count / 2);
+    const bays = Array.from({ length: count }, (_, i) => ({
       x: left + i * bayW, y: top, w: bayW, h: bayL,
       cx: left + i * bayW + bayW / 2, cy: top + bayL / 2,
     }));
-    const target = bays[1];
-    const neighbors = [bays[0], bays[2]].map(b => ({
+    const targetIndex = side;
+    const target = bays[targetIndex];
+    const neighbors = bays.filter((_, i) => i !== targetIndex).map(b => ({
       x: b.cx, y: b.cy, heading: mode.targetHeading, vehicle,
     }));
     // 충돌 대상: 이웃 차량 2대 + 주차장 4면 벽(위쪽 벽은 연석 위치)
@@ -171,6 +195,7 @@
       y: Math.round(H * rel.y),
       heading: vehicle.startHeading != null ? vehicle.startHeading : PK.WORLD.startHeading,
     };
-    return { W, H, top, bays, target, neighbors, walls, start, mode };
+    // viewSide: 결과·공유 그림에 목표 칸 양옆으로 몇 칸까지 보여줄지 (자동차는 옆 1칸씩 = 3칸 전체)
+    return { W, H, top, bays, targetIndex, viewSide: vehicle.viewSide || 1, target, neighbors, walls, start, mode };
   };
 })();

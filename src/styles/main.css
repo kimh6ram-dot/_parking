@@ -205,9 +205,10 @@ button { font-family: inherit; cursor: pointer; }
 .muted { color: var(--muted); }
 
 /* ---------- 차 종류 선택 ---------- */
+/* 차종 6개: 3열 × 2행 — 행 수(높이 164px)가 4종일 때와 같아서 --select-body-height 통일 규칙이 그대로 유지된다 */
 .type-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* minmax(0,…): 안의 캔버스(기본 300px)가 열 최소폭을 밀어내지 않게 */
   gap: 8px;
   width: 100%;
 }
@@ -225,8 +226,10 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 15px;
   font-weight: 700;
 }
-.type-btn canvas { display: block; }
+.type-btn canvas { display: block; max-width: 100%; }
 .type-btn.selected { background: #000000; color: #FFFFFF; }
+/* 자전거처럼 검은 그림이 많은 차량은 검은 선택 배경에서 사라지므로, 선택된 버튼의 아이콘에만 흰 바탕을 깐다 */
+.type-btn.selected canvas { background: #FFFFFF; }
 
 /* ---------- 색상 선택 ---------- */
 .color-list { display: flex; flex-direction: column; gap: 8px; width: 100%; }

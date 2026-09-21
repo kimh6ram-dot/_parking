@@ -35,16 +35,17 @@
     const c = $('intro-canvas'); const s = slotSize(c);
     PK.renderer.renderIntro(c, s.w, s.h);
   }
-  /* 2×2 차량 그리드 아이콘: 고정 scale(이전 0.68)을 쓰면 짧은 차(소형차)는 프레임의 41%만
+  /* 3×2 차량 그리드 아이콘: 고정 scale(이전 0.68)을 쓰면 짧은 차(소형차)는 프레임의 41%만
    * 채우고 긴 차(버스)는 88%를 채워 "같은 카드인데 크기가 다르다"는 인상을 준다.
-   * scale 없이 padX/padY만 주면 renderPreview가 차종마다 프레임에 맞춰 adaptive fit하므로
-   * 세로는 항상 꽉 차고(같은 시각적 무게) 가로만 실제 비율대로 달라진다(섹션 6). */
+   * scale 없이 padX/padY만 주면 renderPreview가 차종마다 프레임에 맞춰 adaptive fit한다(섹션 6).
+   * 아이콘 폭은 버튼 폭에서 계산한다 — 3열이라 320px 폭 화면에서는 버튼이 76px까지 좁아진다. */
   function drawTypeIcons() {
     const short = window.matchMedia && matchMedia('(max-height: 640px)').matches;
-    const size = short ? { w: 96, h: 30, padX: 5, padY: 3 } : { w: 112, h: 46, padX: 6, padY: 4 };
+    const h = short ? 30 : 46, padX = 5, padY = short ? 3 : 4;
     document.querySelectorAll('.type-btn').forEach(btn => {
       btn.classList.toggle('selected', btn.dataset.type === app.vehicleId);
-      PK.renderer.renderPreview(btn.querySelector('canvas'), PK.VEHICLES[btn.dataset.type], '#FFFFFF', size);
+      const w = Math.max(48, btn.clientWidth - 12);
+      PK.renderer.renderPreview(btn.querySelector('canvas'), PK.VEHICLES[btn.dataset.type], '#FFFFFF', { w, h, padX, padY });
     });
   }
   function drawTypePreview() {
@@ -106,7 +107,7 @@
   window.addEventListener('resize', () => {
     PK.play.resize();
     if (PK.state.current === S.INTRO) drawIntro();
-    if (PK.state.current === S.SELECT_TYPE) drawTypePreview();
+    if (PK.state.current === S.SELECT_TYPE) { drawTypeIcons(); drawTypePreview(); } // 아이콘 폭이 버튼 폭에 따라 바뀜
     if (PK.state.current === S.SELECT_COLOR) drawPreview();
   });
 
