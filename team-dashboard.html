@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>사이트 트래픽 대시보드</title>
+  <meta name="robots" content="noindex,nofollow">\n  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">\n  <meta http-equiv="Pragma" content="no-cache">\n  <meta http-equiv="Expires" content="0">
+  <style>
+    :root{--bg:#f5f5f3;--card:#fff;--ink:#111;--muted:#777;--line:#e5e5e0;--soft:#f0f0ed;--good:#16794b}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+    .wrap{max-width:1180px;margin:0 auto;padding:38px 20px 70px}
+    header{display:flex;gap:20px;align-items:flex-end;justify-content:space-between;margin-bottom:26px}
+    h1{font-size:30px;letter-spacing:-.04em;margin:0 0 7px}
+    .sub{font-size:14px;color:var(--muted);margin:0}
+    button{border:1px solid #111;background:#111;color:#fff;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer}
+    button:disabled{opacity:.5;cursor:wait}
+    .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:26px}
+    .summary-card,.project{background:var(--card);border:1px solid var(--line);border-radius:16px}
+    .summary-card{padding:20px}
+    .label{font-size:12px;color:var(--muted);margin-bottom:8px}
+    .big{font-size:30px;font-weight:800;letter-spacing:-.04em}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .project{padding:20px;min-width:0}
+    .project-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px}
+    .name{font-size:18px;font-weight:800;letter-spacing:-.03em}
+    .repo{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all}
+    .meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+    .badge{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:#111;color:#fff;font-size:10px;font-weight:800}
+    .badge.senior{background:#e9e9e5;color:#333}
+    .made{font-size:10px;color:var(--muted)}
+    .site-link{font-size:12px;color:#111;text-decoration:none;border-bottom:1px solid #aaa;white-space:nowrap}
+    .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .metric{background:var(--soft);border-radius:12px;padding:13px}
+    .metric b{display:block;font-size:22px;letter-spacing:-.04em;margin-top:4px}
+    .metric span{font-size:11px;color:var(--muted)}
+    .funnel{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
+    .funnel-title{font-size:12px;font-weight:800;margin-bottom:10px}
+    .funnel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+    .funnel-item{border:1px solid var(--line);border-radius:10px;padding:11px}
+    .funnel-item b{font-size:19px;display:block}
+    .funnel-item span{font-size:10px;color:var(--muted)}
+    .rate{margin-top:10px;font-size:12px;color:var(--good);font-weight:700}
+    .trend{margin-top:14px}
+    .trend-title{font-size:11px;color:var(--muted);margin-bottom:8px}
+    .bars{height:54px;display:flex;align-items:flex-end;gap:5px}
+    .bar{flex:1;min-width:0;background:#111;border-radius:4px 4px 2px 2px;min-height:2px;position:relative}
+    .bar:hover:after{content:attr(data-tip);position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:5px 7px;border-radius:6px;font-size:10px;white-space:nowrap;z-index:3}
+    .status{margin-top:18px;font-size:12px;color:var(--muted)}
+    .error{color:#b42318}
+    footer{margin-top:24px;font-size:11px;line-height:1.6;color:var(--muted)}
+    @media(max-width:760px){
+      .wrap{padding:24px 14px 50px}
+      header{align-items:flex-start;flex-direction:column}
+      .summary{grid-template-columns:repeat(2,1fr)}
+      .grid{grid-template-columns:1fr}
+      .metrics{grid-template-columns:repeat(3,1fr)}
+      .funnel-grid{grid-template-columns:repeat(2,1fr)}
+      h1{font-size:26px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>사이트 트래픽 대시보드 <small style="font-size:11px;color:#777;font-weight:600">TEAM v2</small></h1>
+      <p class="sub">하람 + 사수 통합 · 최근 제작한 사이트가 위쪽 · 2026-09-21 이후 익명 집계</p>
+    </div>
+    <button id="refresh">새로고침</button>
+  </header>
+
+  <section class="summary">
+    <div class="summary-card"><div class="label">전체 페이지뷰</div><div class="big" id="sumViews">-</div></div>
+    <div class="summary-card"><div class="label">전체 고유 방문자</div><div class="big" id="sumUnique">-</div></div>
+    <div class="summary-card"><div class="label">오늘 고유 방문자</div><div class="big" id="sumToday">-</div></div>
+    <div class="summary-card"><div class="label">운영 사이트</div><div class="big" id="siteCount">15</div></div>
+  </section>
+
+  <main class="grid" id="grid"></main>
+  <div class="status" id="status">데이터를 불러오는 중...</div>
+
+  <footer>
+    제작일은 저장소 생성일 또는 해당 프로젝트 폴더의 최초 커밋일을 기준으로 정렬합니다.
+    고유 방문자는 같은 브라우저의 localStorage를 이용한 근사치이며, 브라우저 초기화·시크릿 모드·다른 기기에서는 새 방문자로 집계될 수 있습니다.
+    IP, 이름, 점수 등 개인정보성 입력값은 저장하지 않습니다.
+  </footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  const API = 'https://countapi.mileshilliard.com/api/v1/get/';
+  const PREFIX = 'kimh6ram-20260921-';
+
+  const projects = [
+    {id:'_parking', label:'주차하기', maker:'하람', created:'2026-09-18T09:13:41Z', owner:'kimh6ram-dot', repo:'_parking', funnel:'parking'},
+    {id:'ccojik-clown-sim', label:'꼬직 · 삐연시', maker:'사수', created:'2026-09-14T08:43:56Z', owner:'tmfdl951-source', repo:'ccojik', path:'clown-sim', funnel:'generic'},
+    {id:'toothpaste-poop', label:'치약똥 챌린지', maker:'하람', created:'2026-09-01T09:20:40Z', owner:'kimh6ram-dot', repo:'toothpaste-poop'},
+    {id:'ccojik-deco-cake', label:'꼬직 · 10초 케이크 데코', maker:'사수', created:'2026-08-27T04:01:55Z', owner:'tmfdl951-source', repo:'ccojik', path:'deco-cake', funnel:'generic'},
+    {id:'will-you-marry-me', label:'최애와 결혼합니다 💍', maker:'하람', created:'2026-08-24T08:56:08Z', owner:'kimh6ram-dot', repo:'will-you-marry-me'},
+    {id:'ccojik-hint-draw', label:'꼬직 · 특징만 보고 그리기', maker:'사수', created:'2026-08-21T06:34:20Z', owner:'tmfdl951-source', repo:'ccojik', path:'hint-draw', funnel:'generic'},
+    {id:'ccojik-montage', label:'이거 누구게? · 몽타주 만들기', maker:'사수', created:'2026-08-04T06:59:41Z', owner:'tmfdl951-source', repo:'ccojik', path:'montage', funnel:'generic'},
+    {id:'will-you-come', label:'🎂 생일파티 초대장', maker:'하람', created:'2026-08-03T07:40:05Z', owner:'kimh6ram-dot', repo:'will-you-come'},
+    {id:'ccojik-draw-celeb', label:'연예인 따라그리기', maker:'사수', created:'2026-07-29T07:05:57Z', owner:'tmfdl951-source', repo:'ccojik', path:'draw-celeb', funnel:'generic'},
+    {id:'cutoff-calculator', label:'손절 계산기', maker:'하람', created:'2026-07-28T07:56:33Z', owner:'kimh6ram-dot', repo:'cutoff-calculator'},
+    {id:'ccojik-blind-draw', label:'눈 감고 그리기', maker:'사수', created:'2026-07-27T08:24:31Z', owner:'tmfdl951-source', repo:'ccojik', path:'blind-draw', funnel:'generic'},
+    {id:'ccojik-food', label:'오늘 뭐 먹지? · 결정장애 해결소', maker:'사수', created:'2026-07-23T07:35:14Z', owner:'tmfdl951-source', repo:'ccojik', path:'food', funnel:'generic'},
+    {id:'cyber-lie-detector', label:'사이버 거짓말 탐지기', maker:'하람', created:'2026-07-22T05:48:18Z', owner:'kimh6ram-dot', repo:'cyber-lie-detector'},
+    {id:'ccojik-kaltoe', label:'꼬직 칼퇴 챌린지', maker:'사수', created:'2026-07-10T09:03:59Z', owner:'tmfdl951-source', repo:'ccojik', path:'kaltoe', funnel:'generic'},
+    {id:'will-you-date-me', label:'나랑 데이트 할래? 🌸', maker:'하람', created:'2026-06-12T04:07:32Z', owner:'kimh6ram-dot', repo:'will-you-date-me'}
+  ].sort((a,b)=>new Date(b.created)-new Date(a.created));
+
+  const nf = new Intl.NumberFormat('ko-KR');
+  const $ = s => document.querySelector(s);
+
+  function localDate(d){
+    return [
+      d.getFullYear(),
+      String(d.getMonth()+1).padStart(2,'0'),
+      String(d.getDate()).padStart(2,'0')
+    ].join('-');
+  }
+
+  function madeDate(iso){
+    const d=new Date(iso);
+    return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0');
+  }
+
+  function key(project,event){
+    return (PREFIX + project + '-' + event).replace(/[^a-z0-9_-]+/g,'-');
+  }
+
+  async function get(project,event){
+    try{
+      const r = await fetch(API + encodeURIComponent(key(project,event)), {cache:'no-store'});
+      if(!r.ok) return 0;
+      const j = await r.json();
+      return Number(j.value) || 0;
+    }catch(_){ return 0; }
+  }
+
+  function days7(){
+    const out=[];
+    const now=new Date();
+    for(let i=6;i>=0;i--){
+      const d=new Date(now);
+      d.setDate(now.getDate()-i);
+      out.push(localDate(d));
+    }
+    return out;
+  }
+
+  function dailyEvent(date){ return 'daily_unique_' + date.replace(/-/g,'_'); }
+
+  function projectUrl(p){
+    return 'https://' + p.owner + '.github.io/' + encodeURIComponent(p.repo) + '/' + (p.path ? encodeURIComponent(p.path) + '/' : '');
+  }
+
+  function makerBadge(p){
+    return '<span class="badge ' + (p.maker === '사수' ? 'senior' : '') + '">' + p.maker + '</span>';
+  }
+
+  function funnelTemplate(p){
+    if(p.funnel === 'parking'){
+      return '<div class="funnel"><div class="funnel-title">게임 퍼널</div><div class="funnel-grid">' +
+        '<div class="funnel-item"><b data-k="start">-</b><span>게임 시작</span></div>' +
+        '<div class="funnel-item"><b data-k="complete">-</b><span>게임 완료</span></div>' +
+        '<div class="funnel-item"><b data-k="share">-</b><span>일반 공유</span></div>' +
+        '<div class="funnel-item"><b data-k="challenge">-</b><span>도전장 공유</span></div>' +
+        '</div><div class="rate" data-k="rate">완료율 -</div></div>';
+    }
+    if(p.funnel === 'generic'){
+      return '<div class="funnel"><div class="funnel-title">게임 행동</div><div class="funnel-grid">' +
+        '<div class="funnel-item"><b data-k="start">-</b><span>게임 시작</span></div>' +
+        '<div class="funnel-item"><b data-k="complete">-</b><span>완료/결과</span></div>' +
+        '<div class="funnel-item"><b data-k="share">-</b><span>공유</span></div>' +
+        '<div class="funnel-item"><b data-k="replay">-</b><span>다시 하기</span></div>' +
+        '</div><div class="rate" data-k="rate">완료율 -</div></div>';
+    }
+    return '';
+  }
+
+  function cardTemplate(p){
+    return '<article class="project" id="card-' + p.id + '">' +
+      '<div class="project-head"><div><div class="name">' + p.label + '</div>' +
+      '<div class="repo">' + p.owner + '/' + p.repo + (p.path ? '/' + p.path : '') + '</div>' +
+      '<div class="meta">' + makerBadge(p) + '<span class="made">제작 ' + madeDate(p.created) + '</span></div></div>' +
+      '<a class="site-link" href="' + projectUrl(p) + '" target="_blank" rel="noopener">사이트 열기</a></div>' +
+      '<div class="metrics">' +
+        '<div class="metric"><span>페이지뷰</span><b data-k="views">-</b></div>' +
+        '<div class="metric"><span>고유 방문자</span><b data-k="unique">-</b></div>' +
+        '<div class="metric"><span>오늘 방문자</span><b data-k="today">-</b></div>' +
+      '</div>' +
+      funnelTemplate(p) +
+      '<div class="trend"><div class="trend-title">최근 7일 일별 고유 방문자</div><div class="bars" data-k="bars"></div></div>' +
+    '</article>';
+  }
+
+  $('#grid').innerHTML = projects.map(cardTemplate).join('');
+  $('#siteCount').textContent = nf.format(projects.length);
+
+  function setVal(card,k,v){
+    const el=card.querySelector('[data-k="'+k+'"]');
+    if(el) el.textContent=nf.format(v);
+  }
+
+  async function loadProject(p){
+    const card=document.getElementById('card-'+p.id);
+    const today=localDate(new Date());
+    const ds=days7();
+
+    const basePromises=[
+      get(p.id,'page_view'),
+      get(p.id,'unique_visitor'),
+      get(p.id,dailyEvent(today))
+    ];
+    const dailyPromises=ds.map(d=>get(p.id,dailyEvent(d)));
+
+    let funnelPromises=[];
+    if(p.funnel === 'parking'){
+      funnelPromises=[
+        get(p.id,'game_start'),
+        get(p.id,'game_complete'),
+        get(p.id,'share'),
+        get(p.id,'challenge_share')
+      ];
+    } else if(p.funnel === 'generic'){
+      funnelPromises=[
+        get(p.id,'game_start'),
+        get(p.id,'game_complete'),
+        get(p.id,'share'),
+        get(p.id,'replay')
+      ];
+    }
+
+    const [base,daily,funnel]=await Promise.all([
+      Promise.all(basePromises), Promise.all(dailyPromises), Promise.all(funnelPromises)
+    ]);
+
+    setVal(card,'views',base[0]);
+    setVal(card,'unique',base[1]);
+    setVal(card,'today',base[2]);
+
+    const max=Math.max(1,...daily);
+    const bars=card.querySelector('[data-k="bars"]');
+    bars.innerHTML=daily.map((v,i)=>
+      '<div class="bar" style="height:'+Math.max(4,Math.round(v/max*100))+'%" data-tip="'+ds[i].slice(5)+' · '+nf.format(v)+'명"></div>'
+    ).join('');
+
+    if(p.funnel){
+      setVal(card,'start',funnel[0]);
+      setVal(card,'complete',funnel[1]);
+      setVal(card,'share',funnel[2]);
+      if(p.funnel === 'parking') setVal(card,'challenge',funnel[3]);
+      else setVal(card,'replay',funnel[3]);
+      const rate=funnel[0] ? (funnel[1]/funnel[0]*100).toFixed(1) : '0.0';
+      const rateEl=card.querySelector('[data-k="rate"]');
+      if(rateEl) rateEl.textContent='게임 완료율 ' + rate + '%';
+    }
+
+    return {views:base[0],unique:base[1],today:base[2]};
+  }
+
+  async function refresh(){
+    const btn=$('#refresh'), status=$('#status');
+    btn.disabled=true;
+    status.className='status';
+    status.textContent='데이터를 불러오는 중...';
+    try{
+      const all=await Promise.all(projects.map(loadProject));
+      const sum=(k)=>all.reduce((a,x)=>a+x[k],0);
+      $('#sumViews').textContent=nf.format(sum('views'));
+      $('#sumUnique').textContent=nf.format(sum('unique'));
+      $('#sumToday').textContent=nf.format(sum('today'));
+      status.textContent='마지막 업데이트: ' + new Date().toLocaleString('ko-KR');
+    }catch(e){
+      status.className='status error';
+      status.textContent='일부 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+    }finally{
+      btn.disabled=false;
+    }
+  }
+
+  $('#refresh').addEventListener('click',refresh);
+  refresh();
+  setInterval(refresh,60000);
+})();
+</script>
+</body>
+</html>
