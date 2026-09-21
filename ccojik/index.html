@@ -112,9 +112,19 @@
       position:absolute;
       right:13px;
       bottom:11px;
+      width:40px;
+      height:40px;
       font-size:29px;
-      line-height:1;
+      line-height:40px;
+      text-align:center;
       opacity:.92;
+    }
+    .sprite-icon{
+      background-image:url("./assets/icons-01-10.png");
+      background-repeat:no-repeat;
+      background-size:500% 200%;
+      image-rendering:pixelated;
+      opacity:1;
     }
     .new-badge{
       position:absolute;
@@ -183,16 +193,16 @@
   <script src="../analytics.js"></script>
   <script>
     const baseSites = [
-      {id:'parking', name:'주차 게임', icon:'🚗', url:'https://kimh6ram-dot.github.io/_parking/'},
-      {id:'clown-sim', name:'삐연시', icon:'🤡', url:'https://tmfdl951-source.github.io/ccojik/clown-sim/'},
-      {id:'toothpaste-poop', name:'치약 똥 만들기', icon:'🪥', url:'https://kimh6ram-dot.github.io/toothpaste-poop/'},
-      {id:'deco-cake', name:'케이크 만들기', icon:'🎂', url:'https://tmfdl951-source.github.io/ccojik/deco-cake/'},
-      {id:'will-you-marry-me', name:'최애와 청첩장 만들기', icon:'💍', url:'https://kimh6ram-dot.github.io/will-you-marry-me/'},
-      {id:'hint-draw', name:'특징 듣고 그리기', icon:'✏️', url:'https://tmfdl951-source.github.io/ccojik/hint-draw/'},
-      {id:'montage', name:'몽타주 만들기', icon:'🕵️', url:'https://tmfdl951-source.github.io/ccojik/montage/'},
-      {id:'will-you-come', name:'생일 초대장', icon:'🎉', url:'https://kimh6ram-dot.github.io/will-you-come/'},
-      {id:'draw-celeb', name:'연예인 그리기', icon:'🖍️', url:'https://tmfdl951-source.github.io/ccojik/draw-celeb/'},
-      {id:'cutoff-calculator', name:'손절계산기', icon:'✂️', url:'https://kimh6ram-dot.github.io/cutoff-calculator/'},
+      {id:'parking', name:'주차 게임', iconIndex:0, url:'https://kimh6ram-dot.github.io/_parking/'},
+      {id:'clown-sim', name:'삐연시', iconIndex:1, url:'https://tmfdl951-source.github.io/ccojik/clown-sim/'},
+      {id:'toothpaste-poop', name:'치약 똥 만들기', iconIndex:2, url:'https://kimh6ram-dot.github.io/toothpaste-poop/'},
+      {id:'deco-cake', name:'케이크 만들기', iconIndex:3, url:'https://tmfdl951-source.github.io/ccojik/deco-cake/'},
+      {id:'will-you-marry-me', name:'최애와 청첩장 만들기', iconIndex:4, url:'https://kimh6ram-dot.github.io/will-you-marry-me/'},
+      {id:'hint-draw', name:'특징 듣고 그리기', iconIndex:5, url:'https://tmfdl951-source.github.io/ccojik/hint-draw/'},
+      {id:'montage', name:'몽타주 만들기', iconIndex:6, url:'https://tmfdl951-source.github.io/ccojik/montage/'},
+      {id:'will-you-come', name:'생일 초대장', iconIndex:7, url:'https://kimh6ram-dot.github.io/will-you-come/'},
+      {id:'draw-celeb', name:'연예인 그리기', iconIndex:8, url:'https://tmfdl951-source.github.io/ccojik/draw-celeb/'},
+      {id:'cutoff-calculator', name:'손절계산기', iconIndex:9, url:'https://kimh6ram-dot.github.io/cutoff-calculator/'},
       {id:'blind-draw', name:'눈감고 그리기', icon:'🙈', url:'https://tmfdl951-source.github.io/ccojik/blind-draw/'},
       {id:'food', name:'오늘 뭐먹지?', icon:'🍽️', url:'https://tmfdl951-source.github.io/ccojik/food/'},
       {id:'cyber-lie-detector', name:'사이버 거짓말 탐지기', icon:'🔎', url:'https://kimh6ram-dot.github.io/cyber-lie-detector/'},
@@ -210,12 +220,15 @@
     function render(list){
       grid.innerHTML=list.map((s)=>{
         const idx=sites.indexOf(s)+1;
+        const iconHtml=Number.isInteger(s.iconIndex)
+          ? `<div class="icon sprite-icon" aria-hidden="true" style="background-position:${(s.iconIndex%5)*25}% ${s.iconIndex<5?0:100}%"></div>`
+          : `<div class="icon" aria-hidden="true">${s.icon||'🎮'}</div>`;
         return `
           <a class="card" href="${s.url}" target="_blank" rel="noopener" data-id="${s.id}">
             <div class="index">${String(idx).padStart(2,'0')}</div>
             ${idx===1?'<div class="new-badge">NEW!</div>':''}
             <div class="name">${s.name}</div>
-            <div class="icon" aria-hidden="true">${s.icon}</div>
+            ${iconHtml}
           </a>
         `;
       }).join('');
