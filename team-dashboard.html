@@ -26,8 +26,9 @@
     .name{font-size:18px;font-weight:800;letter-spacing:-.03em}
     .repo{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all}
     .meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
-    .badge{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:#111;color:#fff;font-size:10px;font-weight:800}
-    .badge.senior{background:#e9e9e5;color:#333}
+    .badge{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:10px;font-weight:800;border:1px solid transparent}
+    .badge.haram{background:#DDF7EE;color:#246B57;border-color:#C5EBDD}
+    .badge.iseul{background:#EEE5FF;color:#6B4E9B;border-color:#DDD0F5}
     .made{font-size:10px;color:var(--muted)}
     .site-link{font-size:12px;color:#111;text-decoration:none;border-bottom:1px solid #aaa;white-space:nowrap}
     .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
@@ -65,7 +66,7 @@
   <header>
     <div>
       <h1>사이트 트래픽 대시보드 <small style="font-size:11px;color:#777;font-weight:600">TEAM v2</small></h1>
-      <p class="sub">하람 + 사수 통합 · 최근 제작한 사이트가 위쪽 · 2026-09-21 이후 익명 집계</p>
+      <p class="sub">하람 + 이슬 통합 · 최근 제작한 사이트가 위쪽 · 2026-09-21 이후 익명 집계</p>
     </div>
     <button id="refresh">새로고침</button>
   </header>
@@ -96,19 +97,19 @@
 
   const projects = [
     {id:'_parking', label:'주차하기', maker:'하람', created:'2026-09-18T09:13:41Z', owner:'kimh6ram-dot', repo:'_parking', funnel:'parking'},
-    {id:'ccojik-clown-sim', label:'꼬직 · 삐연시', maker:'사수', created:'2026-09-14T08:43:56Z', owner:'tmfdl951-source', repo:'ccojik', path:'clown-sim', funnel:'generic'},
+    {id:'ccojik-clown-sim', label:'꼬직 · 삐연시', maker:'이슬', created:'2026-09-14T08:43:56Z', owner:'tmfdl951-source', repo:'ccojik', path:'clown-sim', funnel:'generic'},
     {id:'toothpaste-poop', label:'치약똥 챌린지', maker:'하람', created:'2026-09-01T09:20:40Z', owner:'kimh6ram-dot', repo:'toothpaste-poop'},
-    {id:'ccojik-deco-cake', label:'꼬직 · 10초 케이크 데코', maker:'사수', created:'2026-08-27T04:01:55Z', owner:'tmfdl951-source', repo:'ccojik', path:'deco-cake', funnel:'generic'},
+    {id:'ccojik-deco-cake', label:'꼬직 · 10초 케이크 데코', maker:'이슬', created:'2026-08-27T04:01:55Z', owner:'tmfdl951-source', repo:'ccojik', path:'deco-cake', funnel:'generic'},
     {id:'will-you-marry-me', label:'최애와 결혼합니다 💍', maker:'하람', created:'2026-08-24T08:56:08Z', owner:'kimh6ram-dot', repo:'will-you-marry-me'},
-    {id:'ccojik-hint-draw', label:'꼬직 · 특징만 보고 그리기', maker:'사수', created:'2026-08-21T06:34:20Z', owner:'tmfdl951-source', repo:'ccojik', path:'hint-draw', funnel:'generic'},
-    {id:'ccojik-montage', label:'이거 누구게? · 몽타주 만들기', maker:'사수', created:'2026-08-04T06:59:41Z', owner:'tmfdl951-source', repo:'ccojik', path:'montage', funnel:'generic'},
+    {id:'ccojik-hint-draw', label:'꼬직 · 특징만 보고 그리기', maker:'이슬', created:'2026-08-21T06:34:20Z', owner:'tmfdl951-source', repo:'ccojik', path:'hint-draw', funnel:'generic'},
+    {id:'ccojik-montage', label:'이거 누구게? · 몽타주 만들기', maker:'이슬', created:'2026-08-04T06:59:41Z', owner:'tmfdl951-source', repo:'ccojik', path:'montage', funnel:'generic'},
     {id:'will-you-come', label:'🎂 생일파티 초대장', maker:'하람', created:'2026-08-03T07:40:05Z', owner:'kimh6ram-dot', repo:'will-you-come'},
-    {id:'ccojik-draw-celeb', label:'연예인 따라그리기', maker:'사수', created:'2026-07-29T07:05:57Z', owner:'tmfdl951-source', repo:'ccojik', path:'draw-celeb', funnel:'generic'},
+    {id:'ccojik-draw-celeb', label:'연예인 따라그리기', maker:'이슬', created:'2026-07-29T07:05:57Z', owner:'tmfdl951-source', repo:'ccojik', path:'draw-celeb', funnel:'generic'},
     {id:'cutoff-calculator', label:'손절 계산기', maker:'하람', created:'2026-07-28T07:56:33Z', owner:'kimh6ram-dot', repo:'cutoff-calculator'},
-    {id:'ccojik-blind-draw', label:'눈 감고 그리기', maker:'사수', created:'2026-07-27T08:24:31Z', owner:'tmfdl951-source', repo:'ccojik', path:'blind-draw', funnel:'generic'},
-    {id:'ccojik-food', label:'오늘 뭐 먹지? · 결정장애 해결소', maker:'사수', created:'2026-07-23T07:35:14Z', owner:'tmfdl951-source', repo:'ccojik', path:'food', funnel:'generic'},
+    {id:'ccojik-blind-draw', label:'눈 감고 그리기', maker:'이슬', created:'2026-07-27T08:24:31Z', owner:'tmfdl951-source', repo:'ccojik', path:'blind-draw', funnel:'generic'},
+    {id:'ccojik-food', label:'오늘 뭐 먹지? · 결정장애 해결소', maker:'이슬', created:'2026-07-23T07:35:14Z', owner:'tmfdl951-source', repo:'ccojik', path:'food', funnel:'generic'},
     {id:'cyber-lie-detector', label:'사이버 거짓말 탐지기', maker:'하람', created:'2026-07-22T05:48:18Z', owner:'kimh6ram-dot', repo:'cyber-lie-detector'},
-    {id:'ccojik-kaltoe', label:'꼬직 칼퇴 챌린지', maker:'사수', created:'2026-07-10T09:03:59Z', owner:'tmfdl951-source', repo:'ccojik', path:'kaltoe', funnel:'generic'},
+    {id:'ccojik-kaltoe', label:'꼬직 칼퇴 챌린지', maker:'이슬', created:'2026-07-10T09:03:59Z', owner:'tmfdl951-source', repo:'ccojik', path:'kaltoe', funnel:'generic'},
     {id:'will-you-date-me', label:'나랑 데이트 할래? 🌸', maker:'하람', created:'2026-06-12T04:07:32Z', owner:'kimh6ram-dot', repo:'will-you-date-me'}
   ].sort((a,b)=>new Date(b.created)-new Date(a.created));
 
@@ -159,7 +160,8 @@
   }
 
   function makerBadge(p){
-    return '<span class="badge ' + (p.maker === '사수' ? 'senior' : '') + '">' + p.maker + '</span>';
+    const cls = p.maker === '이슬' ? 'iseul' : 'haram';
+    return '<span class="badge ' + cls + '">' + p.maker + '</span>';
   }
 
   function funnelTemplate(p){
