@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ko" data-analytics-project="sites-hub">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>[꼬직] 제작 사이트 모음</title>
+  <meta name="description" content="꼬직에서 제작한 게임과 인터랙티브 사이트를 한 곳에서 만나보세요.">
+  <meta name="robots" content="noindex,nofollow">
+  <style>
+    :root{
+      --bg:#f7f7f3;
+      --card:#ffffff;
+      --ink:#151515;
+      --muted:#7a7a73;
+      --line:#e7e7df;
+      --shadow:0 8px 26px rgba(20,20,18,.06);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    }
+    .wrap{
+      width:min(1180px,100%);
+      margin:0 auto;
+      padding:54px 22px 84px;
+    }
+    header{
+      margin-bottom:34px;
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      padding:7px 11px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:#fff;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:-.02em;
+      margin-bottom:16px;
+    }
+    h1{
+      margin:0;
+      font-size:clamp(34px,6vw,58px);
+      line-height:1.04;
+      letter-spacing:-.055em;
+    }
+    .desc{
+      margin:16px 0 0;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.7;
+      letter-spacing:-.02em;
+    }
+    .tools{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      margin:28px 0 18px;
+    }
+    .search{
+      width:min(420px,100%);
+      height:48px;
+      padding:0 15px 0 42px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#fff;
+      color:var(--ink);
+      font:inherit;
+      outline:none;
+      box-shadow:0 2px 8px rgba(0,0,0,.02);
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%237a7a73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;
+      background-position:14px center;
+    }
+    .search:focus{border-color:#b9b9af}
+    .count{
+      color:var(--muted);
+      font-size:13px;
+      white-space:nowrap;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+    }
+    .card{
+      position:relative;
+      min-height:205px;
+      padding:20px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:var(--card);
+      color:inherit;
+      text-decoration:none;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+    }
+    .card:hover{
+      transform:translateY(-3px);
+      border-color:#d1d1c7;
+      box-shadow:0 14px 34px rgba(20,20,18,.09);
+    }
+    .visual{
+      position:absolute;
+      inset:auto -24px -33px auto;
+      width:132px;
+      height:132px;
+      border-radius:36px;
+      display:grid;
+      place-items:center;
+      font-size:58px;
+      transform:rotate(-7deg);
+      transition:transform .2s ease;
+    }
+    .card:hover .visual{transform:rotate(-2deg) scale(1.04)}
+    .index{
+      font-size:11px;
+      color:var(--muted);
+      font-weight:800;
+      letter-spacing:.05em;
+    }
+    .name{
+      position:relative;
+      z-index:2;
+      margin-top:36px;
+      max-width:78%;
+      font-size:23px;
+      line-height:1.23;
+      font-weight:850;
+      letter-spacing:-.045em;
+      word-break:keep-all;
+    }
+    .open{
+      position:absolute;
+      left:20px;
+      bottom:19px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:12px;
+      font-weight:800;
+      color:#494944;
+    }
+    .open::after{content:"↗";font-size:14px}
+    .c1 .visual{background:#e5f4ff}
+    .c2 .visual{background:#f3e6ff}
+    .c3 .visual{background:#e5f7ef}
+    .c4 .visual{background:#fff0de}
+    .c5 .visual{background:#ffe7ee}
+    .c6 .visual{background:#e9eeff}
+    .c7 .visual{background:#e8f7f4}
+    .c8 .visual{background:#fff3d9}
+    .c9 .visual{background:#f2e9ff}
+    .c10 .visual{background:#e5f4ee}
+    .c11 .visual{background:#edf0f3}
+    .c12 .visual{background:#fff0e8}
+    .c13 .visual{background:#e8f0ff}
+    .c14 .visual{background:#efe8ff}
+    .c15 .visual{background:#fce9ef}
+    .empty{
+      display:none;
+      grid-column:1/-1;
+      padding:70px 20px;
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+    }
+    footer{
+      margin-top:28px;
+      color:#999990;
+      font-size:11px;
+      text-align:center;
+    }
+    @media(max-width:900px){
+      .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media(max-width:600px){
+      .wrap{padding:34px 14px 60px}
+      header{margin-bottom:24px}
+      .desc{font-size:14px}
+      .tools{margin-top:22px;align-items:flex-end;flex-direction:column}
+      .search{width:100%}
+      .count{align-self:flex-start}
+      .grid{grid-template-columns:1fr;gap:11px}
+      .card{min-height:170px;border-radius:17px}
+      .name{margin-top:24px;font-size:21px;max-width:76%}
+      .visual{width:112px;height:112px;font-size:49px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">CCOJIK · SITE COLLECTION</div>
+      <h1>[꼬직] 제작 사이트 모음</h1>
+      <p class="desc">지금까지 제작한 게임과 인터랙티브 사이트를 한 곳에서 바로 실행해보세요.</p>
+    </header>
+
+    <div class="tools">
+      <input id="search" class="search" type="search" placeholder="사이트 이름 검색" autocomplete="off">
+      <div class="count" id="count"></div>
+    </div>
+
+    <main class="grid" id="grid"></main>
+    <div class="empty" id="empty">검색 결과가 없습니다.</div>
+
+    <footer>CCOJIK SITE COLLECTION</footer>
+  </div>
+
+  <script src="../analytics.js"></script>
+  <script>
+    const sites = [
+      {id:'parking', name:'주차하기', icon:'🚗', url:'https://kimh6ram-dot.github.io/_parking/'},
+      {id:'clown-sim', name:'꼬직 · 삐연시', icon:'🤡', url:'https://tmfdl951-source.github.io/ccojik/clown-sim/'},
+      {id:'toothpaste-poop', name:'치약똥 챌린지', icon:'🪥', url:'https://kimh6ram-dot.github.io/toothpaste-poop/'},
+      {id:'deco-cake', name:'꼬직 · 10초 케이크 데코', icon:'🎂', url:'https://tmfdl951-source.github.io/ccojik/deco-cake/'},
+      {id:'will-you-marry-me', name:'최애와 결혼합니다', icon:'💍', url:'https://kimh6ram-dot.github.io/will-you-marry-me/'},
+      {id:'hint-draw', name:'꼬직 · 특징만 보고 그리기', icon:'✏️', url:'https://tmfdl951-source.github.io/ccojik/hint-draw/'},
+      {id:'montage', name:'이거 누구게? · 몽타주 만들기', icon:'🕵️', url:'https://tmfdl951-source.github.io/ccojik/montage/'},
+      {id:'will-you-come', name:'생일파티 초대장', icon:'🎉', url:'https://kimh6ram-dot.github.io/will-you-come/'},
+      {id:'draw-celeb', name:'연예인 따라그리기', icon:'🖍️', url:'https://tmfdl951-source.github.io/ccojik/draw-celeb/'},
+      {id:'cutoff-calculator', name:'손절 계산기', icon:'✂️', url:'https://kimh6ram-dot.github.io/cutoff-calculator/'},
+      {id:'blind-draw', name:'눈 감고 그리기', icon:'🙈', url:'https://tmfdl951-source.github.io/ccojik/blind-draw/'},
+      {id:'food', name:'오늘 뭐 먹지? · 결정장애 해결소', icon:'🍽️', url:'https://tmfdl951-source.github.io/ccojik/food/'},
+      {id:'cyber-lie-detector', name:'사이버 거짓말 탐지기', icon:'🔎', url:'https://kimh6ram-dot.github.io/cyber-lie-detector/'},
+      {id:'kaltoe', name:'꼬직 칼퇴 챌린지', icon:'🏃', url:'https://tmfdl951-source.github.io/ccojik/kaltoe/'},
+      {id:'will-you-date-me', name:'나랑 데이트 할래?', icon:'🌷', url:'https://kimh6ram-dot.github.io/will-you-date-me/'}
+    ];
+
+    const grid = document.getElementById('grid');
+    const search = document.getElementById('search');
+    const count = document.getElementById('count');
+    const empty = document.getElementById('empty');
+
+    function render(list){
+      grid.innerHTML = list.map((s,i) => `
+        <a class="card c${(sites.indexOf(s)%15)+1}" href="${s.url}" target="_blank" rel="noopener" data-id="${s.id}">
+          <div class="index">${String(sites.indexOf(s)+1).padStart(2,'0')}</div>
+          <div class="name">${s.name}</div>
+          <div class="open">사이트 열기</div>
+          <div class="visual" aria-hidden="true">${s.icon}</div>
+        </a>
+      `).join('');
+      count.textContent = '총 ' + list.length + '개';
+      empty.style.display = list.length ? 'none' : 'block';
+    }
+
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      render(q ? sites.filter(s => s.name.toLowerCase().includes(q)) : sites);
+    });
+
+    document.addEventListener('click', e => {
+      const card = e.target.closest('.card');
+      if (!card || !window.SiteAnalytics) return;
+      window.SiteAnalytics.track('open_' + card.dataset.id);
+    });
+
+    render(sites);
+  </script>
+</body>
+</html>
