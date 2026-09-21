@@ -193,6 +193,7 @@
   <script src="../analytics.js"></script>
   <script>
     const baseSites = [
+      {id:'film-master', name:'보호필름 한 번에 붙이기', icon:'📱', url:'https://tmfdl951-source.github.io/ccojik/film-master/'},
       {id:'parking', name:'주차 게임', iconIndex:0, url:'https://kimh6ram-dot.github.io/_parking/'},
       {id:'clown-sim', name:'삐연시', iconIndex:1, url:'https://tmfdl951-source.github.io/ccojik/clown-sim/'},
       {id:'toothpaste-poop', name:'치약 똥 만들기', iconIndex:2, url:'https://kimh6ram-dot.github.io/toothpaste-poop/'},
@@ -335,10 +336,10 @@
 
     async function discoverTmfGames(){
       const known=new Set([
-        'clown-sim','deco-cake','hint-draw','montage',
+        'film-master','clown-sim','deco-cake','hint-draw','montage',
         'draw-celeb','blind-draw','food','kaltoe'
       ]);
-      const ignored=new Set(['assets','film-master']);
+      const ignored=new Set(['assets']);
 
       try{
         const res=await fetch('https://api.github.com/repos/tmfdl951-source/ccojik/contents?ref=master',{
