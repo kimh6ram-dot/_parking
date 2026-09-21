@@ -119,6 +119,7 @@
       text-align:center;
       opacity:.92;
     }
+    .icon-img{object-fit:contain;display:block}
     .sprite-icon{
       background-image:url("./assets/icons-01-15.png?v=3");
       background-repeat:no-repeat;
@@ -193,7 +194,7 @@
   <script src="../analytics.js"></script>
   <script>
     const baseSites = [
-      {id:'film-master', name:'보호필름 한 번에 붙이기', icon:'📱', url:'https://tmfdl951-source.github.io/ccojik/film-master/'},
+      {id:'film-master', name:'핸드폰 필름 붙이기', image:'./assets/film-master-icon.png?v=1', url:'https://tmfdl951-source.github.io/ccojik/film-master/'},
       {id:'parking', name:'주차 게임', iconIndex:0, url:'https://kimh6ram-dot.github.io/_parking/'},
       {id:'clown-sim', name:'삐연시', iconIndex:1, url:'https://tmfdl951-source.github.io/ccojik/clown-sim/'},
       {id:'toothpaste-poop', name:'치약 똥 만들기', iconIndex:2, url:'https://kimh6ram-dot.github.io/toothpaste-poop/'},
@@ -221,9 +222,11 @@
     function render(list){
       grid.innerHTML=list.map((s)=>{
         const idx=sites.indexOf(s)+1;
-        const iconHtml=Number.isInteger(s.iconIndex)
-          ? `<div class="icon sprite-icon" aria-hidden="true" style="background-position:${(s.iconIndex%5)*25}% ${Math.floor(s.iconIndex/5)*50}%"></div>`
-          : `<div class="icon" aria-hidden="true">${s.icon||'🎮'}</div>`;
+        const iconHtml=s.image
+          ? `<img class="icon icon-img" src="${s.image}" alt="" aria-hidden="true">`
+          : Number.isInteger(s.iconIndex)
+            ? `<div class="icon sprite-icon" aria-hidden="true" style="background-position:${(s.iconIndex%5)*25}% ${Math.floor(s.iconIndex/5)*50}%"></div>`
+            : `<div class="icon" aria-hidden="true">${s.icon||'🎮'}</div>`;
         return `
           <a class="card" href="${s.url}" target="_blank" rel="noopener" data-id="${s.id}">
             <div class="index">${String(idx).padStart(2,'0')}</div>
@@ -339,7 +342,7 @@
         'film-master','clown-sim','deco-cake','hint-draw','montage',
         'draw-celeb','blind-draw','food','kaltoe'
       ]);
-      const ignored=new Set(['assets']);
+      const ignored=new Set(['assets','tongue-clean']);
 
       try{
         const res=await fetch('https://api.github.com/repos/tmfdl951-source/ccojik/contents?ref=master',{
