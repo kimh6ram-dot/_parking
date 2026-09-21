@@ -25,6 +25,8 @@ src/game/sprites.js       에셋 스프라이트 로드 + 차체 착색
 src/game/sprites-data.js  assets/*.png 내장 데이터(자동 생성)
 src/game/renderer.js      주차장·차량 그리기(스프라이트 우선, 벡터 실루엣 fallback), 스냅샷, 미리보기
 tools/build-sprites.js    assets/*.png → sprites-data.js 빌드(의존성 없음)
+tools/bump-version.js     index.html의 CSS/JS 주소에 ?v=<시각>을 갱신(배포 전 실행 — 아래 "배포" 참고)
+tools/serve.js            같은 와이파이의 폰에서 테스트하는 정적 서버(0.0.0.0:8080)
 src/game/input.js         방향키 + 터치 방향 버튼(Pointer Events, 멀티터치)
 src/game/play.js          플레이 루프, 타이머, 자동 주차 완료(정차 0.65s), settling(0.7s)
 src/game/scoring.js       실제 최종 위치·각도·여백·충돌·시간·정차 상태로 100점 채점
@@ -103,6 +105,10 @@ src/styles/main.css       흑백 UI
 - **PNG를 바꾸면** `node tools/build-sprites.js` 를 한 번 실행해 내장 파일을 다시 만든다(외부 패키지 불필요). `--analyze`를 붙이면 바운딩박스·색 분포만 출력
 - 차량 폭(`config.js`의 `width`)은 스프라이트 실측 비율에 맞춰 두었다. 길이만 바꾸면 그림 비율이 따라가고, 충돌 박스는 폭×길이 사각형
 - 스프라이트가 없거나 로드 전이면 `renderer.js`의 벡터 실루엣으로 대신 그린다
+
+## 배포 (GitHub Pages)
+
+**푸시 전에 `node tools/bump-version.js`를 실행한다.** GitHub Pages는 모든 파일에 10분 캐시(`max-age=600`)를 붙이는데, `index.html`의 CSS/JS 주소가 그대로면 배포 직후 폰에서 새로고침했을 때 HTML만 새 버전이고 CSS/JS는 캐시된 옛 버전이 섞인다. 실제로 오토바이·자전거를 추가한 직후 차 선택창이 이렇게 깨졌다(2열 그리드로 표시, 버튼이 화면 밖으로 밀림, 아이콘·미리보기 빔, 콘솔 에러). 스크립트가 주소 뒤에 `?v=<시각>`을 붙여 배포마다 새 파일을 받게 한다. 이미 옛 버전이 캐시된 폰은 새로고침하거나 10분 뒤에 열면 정상으로 돌아온다. 배포 후 확인은 `https://<계정>.github.io/_parking/`를 모바일 프로필로 열어 본다.
 
 ## 오토바이 · 자전거 (2륜, 2026-09-21 추가)
 
