@@ -120,9 +120,9 @@
       opacity:.92;
     }
     .sprite-icon{
-      background-image:url("./assets/icons-01-10.png");
+      background-image:url("./assets/icons-01-15.png?v=2");
       background-repeat:no-repeat;
-      background-size:500% 200%;
+      background-size:500% 300%;
       image-rendering:pixelated;
       opacity:1;
     }
@@ -203,11 +203,11 @@
       {id:'will-you-come', name:'생일 초대장', iconIndex:7, url:'https://kimh6ram-dot.github.io/will-you-come/'},
       {id:'draw-celeb', name:'연예인 그리기', iconIndex:8, url:'https://tmfdl951-source.github.io/ccojik/draw-celeb/'},
       {id:'cutoff-calculator', name:'손절계산기', iconIndex:9, url:'https://kimh6ram-dot.github.io/cutoff-calculator/'},
-      {id:'blind-draw', name:'눈감고 그리기', icon:'🙈', url:'https://tmfdl951-source.github.io/ccojik/blind-draw/'},
-      {id:'food', name:'오늘 뭐먹지?', icon:'🍽️', url:'https://tmfdl951-source.github.io/ccojik/food/'},
-      {id:'cyber-lie-detector', name:'사이버 거짓말 탐지기', icon:'🔎', url:'https://kimh6ram-dot.github.io/cyber-lie-detector/'},
-      {id:'kaltoe', name:'칼퇴 게임', icon:'🏃', url:'https://tmfdl951-source.github.io/ccojik/kaltoe/'},
-      {id:'will-you-date-me', name:'나랑 데이트 할래?', icon:'🌷', url:'https://kimh6ram-dot.github.io/will-you-date-me/'}
+      {id:'blind-draw', name:'눈감고 그리기', iconIndex:10, url:'https://tmfdl951-source.github.io/ccojik/blind-draw/'},
+      {id:'food', name:'오늘 뭐먹지?', iconIndex:11, url:'https://tmfdl951-source.github.io/ccojik/food/'},
+      {id:'cyber-lie-detector', name:'사이버 거짓말 탐지기', iconIndex:12, url:'https://kimh6ram-dot.github.io/cyber-lie-detector/'},
+      {id:'kaltoe', name:'칼퇴 게임', iconIndex:13, url:'https://tmfdl951-source.github.io/ccojik/kaltoe/'},
+      {id:'will-you-date-me', name:'나랑 데이트 할래?', iconIndex:14, url:'https://kimh6ram-dot.github.io/will-you-date-me/'}
     ];
 
     let sites=[...baseSites];
@@ -221,7 +221,7 @@
       grid.innerHTML=list.map((s)=>{
         const idx=sites.indexOf(s)+1;
         const iconHtml=Number.isInteger(s.iconIndex)
-          ? `<div class="icon sprite-icon" aria-hidden="true" style="background-position:${(s.iconIndex%5)*25}% ${s.iconIndex<5?0:100}%"></div>`
+          ? `<div class="icon sprite-icon" aria-hidden="true" style="background-position:${(s.iconIndex%5)*25}% ${Math.floor(s.iconIndex/5)*50}%"></div>`
           : `<div class="icon" aria-hidden="true">${s.icon||'🎮'}</div>`;
         return `
           <a class="card" href="${s.url}" target="_blank" rel="noopener" data-id="${s.id}">
