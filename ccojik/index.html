@@ -108,18 +108,6 @@
       letter-spacing:-.04em;
       word-break:keep-all;
     }
-    .open{
-      position:absolute;
-      left:14px;
-      bottom:12px;
-      font-size:11px;
-      color:#4f4f48;
-      font-weight:700;
-      display:flex;
-      align-items:center;
-      gap:5px;
-    }
-    .open::after{content:"↗";font-size:12px}
     .icon{
       position:absolute;
       right:13px;
@@ -175,7 +163,7 @@
     <main class="grid" id="grid"></main>
     <div class="empty" id="empty">검색 결과가 없습니다.</div>
 
-    <footer>CCOJIK SITE COLLECTION</footer>
+    <footer>CONTECT ziksunmedia@gmail.com</footer>
   </div>
 
   <script src="../analytics.js"></script>
@@ -210,7 +198,6 @@
           <a class="card" href="${s.url}" target="_blank" rel="noopener" data-id="${s.id}">
             <div class="index">${String(idx).padStart(2,'0')}</div>
             <div class="name">${s.name}</div>
-            <div class="open">사이트 열기</div>
             <div class="icon" aria-hidden="true">${s.icon}</div>
           </a>
         `;
