@@ -116,6 +116,20 @@
       line-height:1;
       opacity:.92;
     }
+    .new-badge{
+      position:absolute;
+      top:12px;
+      right:12px;
+      padding:5px 8px 4px;
+      border-radius:999px;
+      background:#111;
+      color:#fff;
+      font-size:10px;
+      line-height:1;
+      font-weight:800;
+      letter-spacing:.04em;
+      box-shadow:0 2px 8px rgba(0,0,0,.12);
+    }
     .empty{
       display:none;
       grid-column:1/-1;
@@ -197,6 +211,7 @@
         return `
           <a class="card" href="${s.url}" target="_blank" rel="noopener" data-id="${s.id}">
             <div class="index">${String(idx).padStart(2,'0')}</div>
+            ${idx===sites.length?'<div class="new-badge">NEW!</div>':''}
             <div class="name">${s.name}</div>
             <div class="icon" aria-hidden="true">${s.icon}</div>
           </a>
