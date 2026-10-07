@@ -42,7 +42,7 @@
     .funnel-item b{font-size:19px;display:block}
     .funnel-item span{font-size:10px;color:var(--muted)}
     .rate{margin-top:10px;font-size:12px;color:var(--good);font-weight:700}
-    .trend{margin-top:14px}
+    .baseline-note{margin-top:10px;font-size:11px;color:var(--muted);font-weight:700}\n    .trend{margin-top:14px}
     .trend-title{font-size:11px;color:var(--muted);margin-bottom:8px}
     .bars{height:54px;display:flex;align-items:flex-end;gap:5px}
     .bar{flex:1;min-width:0;background:#111;border-radius:4px 4px 2px 2px;min-height:2px;position:relative}
@@ -96,7 +96,7 @@
   const PREFIX = 'kimh6ram-20260921-';
 
   let projects = [
-    {id:'stack-a-burger', label:'햄버거 쌓기', maker:'하람', created:'2026-10-01T09:41:13Z', owner:'kimh6ram-dot', repo:'stack-a-burger', funnel:'generic'},
+    {id:'stack-a-burger', label:'햄버거 쌓기', maker:'하람', created:'2026-10-01T09:41:13Z', owner:'kimh6ram-dot', repo:'stack-a-burger', funnel:'generic', baselineViews:1306, baselineLabel:'인포크 기존 링크 클릭 1,306'},
     {id:'ccojik-film-master', label:'핸드폰 필름 붙이기', maker:'이슬', created:'2026-09-21T07:28:44Z', owner:'tmfdl951-source', repo:'ccojik', path:'film-master', funnel:'generic'},
     {id:'_parking', label:'주차 게임', maker:'하람', created:'2026-09-18T09:13:41Z', owner:'kimh6ram-dot', repo:'_parking', funnel:'parking'},
     {id:'ccojik-clown-sim', label:'삐연시', maker:'이슬', created:'2026-09-14T08:43:56Z', owner:'tmfdl951-source', repo:'ccojik', path:'clown-sim', funnel:'generic'},
@@ -197,6 +197,7 @@
         '<div class="metric"><span>고유 방문자</span><b data-k="unique">-</b></div>' +
         '<div class="metric"><span>오늘 방문자</span><b data-k="today">-</b></div>' +
       '</div>' +
+      (p.baselineLabel ? '<div class="baseline-note">' + p.baselineLabel + '</div>' : '') +
       funnelTemplate(p) +
       '<div class="trend"><div class="trend-title">최근 7일 일별 고유 방문자</div><div class="bars" data-k="bars"></div></div>' +
     '</article>';
@@ -349,7 +350,7 @@
       Promise.all(basePromises), Promise.all(dailyPromises), Promise.all(funnelPromises)
     ]);
 
-    setVal(card,'views',base[0]);
+    const totalViews = base[0] + (Number(p.baselineViews) || 0);\n    setVal(card,'views',totalViews);
     setVal(card,'unique',base[1]);
     setVal(card,'today',base[2]);
 
@@ -370,7 +371,7 @@
       if(rateEl) rateEl.textContent='게임 완료율 ' + rate + '%';
     }
 
-    return {views:base[0],unique:base[1],today:base[2]};
+    return {views:totalViews,unique:base[1],today:base[2]};
   }
 
   async function refresh(){
