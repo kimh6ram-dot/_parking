@@ -95,7 +95,8 @@
   const API = 'https://countapi.mileshilliard.com/api/v1/get/';
   const PREFIX = 'kimh6ram-20260921-';
 
-  const projects = [
+  let projects = [
+    {id:'stack-a-burger', label:'햄버거 쌓기', maker:'하람', created:'2026-10-01T09:41:13Z', owner:'kimh6ram-dot', repo:'stack-a-burger', funnel:'generic'},
     {id:'ccojik-film-master', label:'핸드폰 필름 붙이기', maker:'이슬', created:'2026-09-21T07:28:44Z', owner:'tmfdl951-source', repo:'ccojik', path:'film-master', funnel:'generic'},
     {id:'_parking', label:'주차 게임', maker:'하람', created:'2026-09-18T09:13:41Z', owner:'kimh6ram-dot', repo:'_parking', funnel:'parking'},
     {id:'ccojik-clown-sim', label:'삐연시', maker:'이슬', created:'2026-09-14T08:43:56Z', owner:'tmfdl951-source', repo:'ccojik', path:'clown-sim', funnel:'generic'},
@@ -201,6 +202,112 @@
     '</article>';
   }
 
+  async function fetchProjectTitle(owner, repo, branch, path){
+    try{
+      const filePath = path ? encodeURIComponent(path) + '/index.html' : 'index.html';
+      const api = 'https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + filePath + '?ref=' + encodeURIComponent(branch || 'main');
+      const r = await fetch(api,{headers:{Accept:'application/vnd.github+json'}});
+      if(!r.ok) return '';
+      const j = await r.json();
+      if(!j || !j.content) return '';
+      const binary = atob((j.content || '').replace(/\n/g,''));
+      const bytes = Uint8Array.from(binary,c=>c.charCodeAt(0));
+      const html = new TextDecoder('utf-8').decode(bytes);
+      const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      return (m && m[1] ? m[1] : '')
+        .replace(/<[^>]+>/g,'')
+        .replace(/&amp;/g,'&')
+        .replace(/&#39;/g,"'")
+        .replace(/&quot;/g,'"')
+        .replace(/\[꼬직\]/g,'')
+        .replace(/CCOJIK/gi,'')
+        .trim();
+    }catch(_){ return ''; }
+  }
+
+  function slugLabel(slug){
+    return String(slug || '')
+      .replace(/^_+/,'')
+      .split(/[-_]+/)
+      .filter(Boolean)
+      .map(v=>v.charAt(0).toUpperCase()+v.slice(1))
+      .join(' ');
+  }
+
+  async function syncDiscoveredProjects(){
+    const knownIds = new Set(projects.map(p=>p.id));
+    const discovered = [];
+
+    try{
+      const r = await fetch('https://api.github.com/users/kimh6ram-dot/repos?per_page=100&type=owner&sort=created&direction=desc',{
+        headers:{Accept:'application/vnd.github+json'}
+      });
+      if(r.ok){
+        const repos = await r.json();
+        const ignored = new Set(['_parking','kimharam','ccojik']);
+        for(const repo of repos){
+          if(!repo || repo.fork || repo.has_pages !== true || ignored.has(repo.name) || knownIds.has(repo.name)) continue;
+          const title = await fetchProjectTitle('kimh6ram-dot',repo.name,repo.default_branch || 'main','');
+          discovered.push({
+            id:repo.name,
+            label:title || slugLabel(repo.name),
+            maker:'하람',
+            created:repo.created_at || repo.pushed_at || new Date().toISOString(),
+            owner:'kimh6ram-dot',
+            repo:repo.name,
+            funnel:'generic'
+          });
+          knownIds.add(repo.name);
+        }
+      }
+    }catch(_){}
+
+    try{
+      const r = await fetch('https://api.github.com/repos/tmfdl951-source/ccojik/contents?ref=master',{
+        headers:{Accept:'application/vnd.github+json'}
+      });
+      if(r.ok){
+        const entries = await r.json();
+        const knownPaths = new Set(projects.filter(p=>p.owner==='tmfdl951-source' && p.repo==='ccojik' && p.path).map(p=>p.path));
+        const ignored = new Set(['assets','tongue-clean','.github']);
+        for(const item of entries){
+          if(!item || item.type !== 'dir' || ignored.has(item.name) || knownPaths.has(item.name)) continue;
+          const title = await fetchProjectTitle('tmfdl951-source','ccojik','master',item.name);
+          if(!title) continue;
+          let created = new Date().toISOString();
+          try{
+            const cr = await fetch('https://api.github.com/repos/tmfdl951-source/ccojik/commits?path=' + encodeURIComponent(item.name) + '&per_page=1',{
+              headers:{Accept:'application/vnd.github+json'}
+            });
+            if(cr.ok){
+              const commits = await cr.json();
+              created = commits?.[0]?.commit?.author?.date || commits?.[0]?.commit?.committer?.date || created;
+            }
+          }catch(_){}
+          const id='ccojik-' + item.name;
+          if(knownIds.has(id)) continue;
+          discovered.push({
+            id,
+            label:title || slugLabel(item.name),
+            maker:'이슬',
+            created,
+            owner:'tmfdl951-source',
+            repo:'ccojik',
+            path:item.name,
+            funnel:'generic'
+          });
+          knownIds.add(id);
+        }
+      }
+    }catch(_){}
+
+    if(!discovered.length) return;
+    projects=[...projects,...discovered].sort((a,b)=>new Date(b.created)-new Date(a.created));
+    $('#grid').innerHTML = projects.map(cardTemplate).join('');
+    $('#siteCount').textContent = nf.format(projects.length);
+    await refresh();
+  }
+
   $('#grid').innerHTML = projects.map(cardTemplate).join('');
   $('#siteCount').textContent = nf.format(projects.length);
 
@@ -288,6 +395,7 @@
 
   $('#refresh').addEventListener('click',refresh);
   refresh();
+  syncDiscoveredProjects();
   setInterval(refresh,60000);
 })();
 </script>
