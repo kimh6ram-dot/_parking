@@ -350,7 +350,8 @@
       Promise.all(basePromises), Promise.all(dailyPromises), Promise.all(funnelPromises)
     ]);
 
-    const totalViews = base[0] + (Number(p.baselineViews) || 0);\n    setVal(card,'views',totalViews);
+    const totalViews = base[0] + (Number(p.baselineViews) || 0);
+    setVal(card,'views',totalViews);
     setVal(card,'unique',base[1]);
     setVal(card,'today',base[2]);
 
