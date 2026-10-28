@@ -7,6 +7,10 @@
   const $ = id => document.getElementById(id);
   const COLOR_WORD = { blue: '파란색', red: '빨간색', yellow: '노란색', white: '흰색' };
 
+  function track(name) {
+    if (window.SiteAnalytics) window.SiteAnalytics.track(name);
+  }
+
   let toastTimer = 0;
   function toast(msg) {
     const el = $('toast');
@@ -60,6 +64,7 @@
 
   /* ---------- 이미지 저장 / 공유 ---------- */
   $('btn-save-img').addEventListener('click', () => {
+    track('save_result');
     const out = PK.app.last;
     if (!out) return;
     const img = PK.share.buildImage(out.result, out.snapshot, vehicleLabel(out));
@@ -67,6 +72,7 @@
     toast('이미지를 저장했습니다');
   });
   $('btn-share').addEventListener('click', async () => {
+    track('share');
     const out = PK.app.last;
     if (!out) return;
     try {
@@ -102,6 +108,7 @@
   }
 
   $('btn-challenge').addEventListener('click', async () => {
+    track('challenge_share');
     const out = PK.app.last;
     if (!out) return;
     const nickname = await askNickname();

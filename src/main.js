@@ -70,13 +70,21 @@
     }, onPlayDone);
   });
 
+  function track(name) {
+    if (window.SiteAnalytics) window.SiteAnalytics.track(name);
+  }
+
   function onPlayDone(out) {
+    track('game_complete');
     app.last = out;
     PK.state.set(S.RESULT, out);
   }
 
   /* ---------- 버튼 ---------- */
-  $('btn-start').addEventListener('click', () => PK.state.set(S.SELECT_TYPE));
+  $('btn-start').addEventListener('click', () => {
+    track('flow_start');
+    PK.state.set(S.SELECT_TYPE);
+  });
 
   $('type-grid').addEventListener('click', e => {
     const btn = e.target.closest('.type-btn');
@@ -94,12 +102,24 @@
     drawPreview(); // 즉시 미리보기 반영
   });
   $('btn-color-next').addEventListener('click', () => PK.state.set(S.TUTORIAL));
-  $('btn-play').addEventListener('click', () => PK.state.set(S.PLAYING));
+  $('btn-play').addEventListener('click', () => {
+    track('game_start');
+    PK.state.set(S.PLAYING);
+  });
 
-  $('btn-retry').addEventListener('click', () => PK.state.set(S.PLAYING));       // 같은 차·색으로 바로 재도전
+  $('btn-retry').addEventListener('click', () => {
+    track('replay');
+    PK.state.set(S.PLAYING);
+  });       // 같은 차·색으로 바로 재도전
   $('btn-change-car').addEventListener('click', () => PK.state.set(S.SELECT_TYPE));
-  $('btn-challenge-start').addEventListener('click', () => PK.state.set(S.SELECT_TYPE));
-  $('btn-rematch').addEventListener('click', () => PK.state.set(S.PLAYING));
+  $('btn-challenge-start').addEventListener('click', () => {
+    track('challenge_start');
+    PK.state.set(S.SELECT_TYPE);
+  });
+  $('btn-rematch').addEventListener('click', () => {
+    track('replay');
+    PK.state.set(S.PLAYING);
+  });
   $('btn-vs-detail').addEventListener('click', () => PK.state.set(S.RESULT, app.last));
   $('btn-battle-result').addEventListener('click', () => PK.state.set(S.BATTLE_RESULT));
 
