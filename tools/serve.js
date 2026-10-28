@@ -12,7 +12,9 @@ http.createServer((req, res) => {
   if (!full.startsWith(ROOT)) { res.writeHead(403); res.end(); return; }
   fs.readFile(full, (err, data) => {
     if (err) { res.writeHead(404); res.end('Not found: ' + p); return; }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(full)] || 'application/octet-stream' });
+    // 캐시 응답 헤더가 없으면 브라우저가 자체 휴리스틱으로 캐싱해 수정한 파일이 바로
+    // 반영 안 되는 사례가 있었다(2026-10-01) — 매 요청 디스크에서 새로 읽으므로 명시적으로도 금지.
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(full)] || 'application/octet-stream', 'Cache-Control': 'no-cache, no-store, must-revalidate' });
     res.end(data);
   });
 }).listen(8080, '0.0.0.0', () => console.log('serving on 0.0.0.0:8080'));

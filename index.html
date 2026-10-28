@@ -3,14 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<!-- 2026-10-01: 도로주행 쪽 파일을 자주 고치는 동안 브라우저가 이 문서/스크립트를 캐시해
+     옛 코드를 계속 보여주는 사례가 있었다 — 이 문서 자체를 매번 재검증하도록 강제한다
+     (각 <script> 태그의 ?v= 쿼리스트링과 별개로, 문서 자체가 캐시되면 그 쿼리스트링도
+     옛 값인 채로 다시 보일 수 있다). 주차게임 쪽 동작과는 무관, 순수 캐시 정책. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>주차하기</title>
 <meta property="og:title" content="주차하기">
 <meta property="og:description" content="한 번에 주차하세요">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="src/styles/main.css?v=202609211141">
+<link rel="stylesheet" href="src/styles/game-select.css?v=202609211141">
+<link rel="stylesheet" href="src/styles/driving.css?v=202610020007">
+<link rel="stylesheet" href="src/styles/parkingbeta.css?v=202610280002">
 </head>
 <body>
-<div id="app">
+
+<!-- GAME SELECT : 상위 진입 레이어. 기존 주차게임(#app)과 완전히 분리되어 있다.
+     기존 화면과 같은 시리즈로 보이도록 main.css의 .slot-title/.slot-visual/.slot-actions/.cta를
+     그대로 재사용한다(game-select.css는 이 컴포넌트들로 표현 안 되는 목록 아이템만 추가). -->
+<div id="menu-root" class="game-select-root">
+  <section id="menu-select" class="game-select active">
+    <h1 class="slot-title main">운전을 선택하세요</h1>
+    <!-- 각 카드는 기존 주차/도로주행 INTRO 화면(비주얼+메인카피)을 그대로 옮긴 것 — 새 축약
+         썸네일이 아니라 "다음 화면"의 preview 렌더 함수를 그대로 재사용한다(game-select.js).
+         시작하기 버튼은 없고 카드 전체가 클릭 영역이며, 클릭 시 각 게임의 INTRO는 건너뛰고
+         바로 다음 단계(차종 선택)로 진입한다. -->
+    <div class="game-select__list">
+      <button type="button" class="game-select__card" data-target="parking">
+        <div class="game-select__visual"><canvas id="icon-parking"></canvas></div>
+        <h2 class="game-select__copy">한 번에 주차하세요</h2>
+      </button>
+      <button type="button" class="game-select__card" data-target="driving">
+        <div class="game-select__visual"><canvas id="icon-driving"></canvas></div>
+        <h2 class="game-select__copy">안전하게 도착하세요</h2>
+      </button>
+      <!-- 주차하기 베타: 기존 주차게임과 완전히 분리된 신규 루트(#parkingbeta-root)로 연결.
+           game-select.js는 건드리지 않고(그 파일의 클릭 분기는 'parking' 외엔 전부 도로주행으로
+           보내는 이분법이라 그대로 두면 이 카드도 도로주행으로 감), parkingbeta/main.js가 이
+           카드에만 별도 리스너를 붙여 그 핸들러 실행을 막는다. -->
+      <button type="button" class="game-select__card" data-target="parkingbeta">
+        <div class="game-select__visual"><canvas id="icon-parkingbeta"></canvas></div>
+        <h2 class="game-select__copy">단계별로 더 어려워지는 주차 (베타)</h2>
+      </button>
+    </div>
+  </section>
+</div>
+
+<div id="app" class="hidden">
 
   <!-- INTRO : 비주얼(주차장 예시) → 메인 카피 → [시작하기] -->
   <section id="screen-intro" class="screen active">
@@ -156,6 +198,343 @@
 
 </div>
 
+<!-- 도로주행: 완전히 분리된 루트(#driving-root). 주차게임(#app)과 동일한 프레임(game-select-root
+     재사용)·동일한 컴포넌트 클래스(slot-visual/slot-title/cta/type-grid/color-list/topbar/dpad
+     /result-*/challenge-*/vs-*)를 쓰되, state.js가 아닌 driving/state.js가 .driving-screen을
+     관리한다. 주차게임 파일은 이 블록에서도 전혀 수정하지 않는다. -->
+<div id="driving-root" class="game-select-root hidden">
+
+  <!-- INTRO -->
+  <section id="driving-screen-intro" class="driving-screen active">
+    <div class="slot-visual"><canvas id="driving-intro-canvas"></canvas></div>
+    <h1 class="slot-title main">안전하게 도착하세요</h1>
+    <div class="slot-actions">
+      <button id="btn-driving-intro-start" class="cta">시작하기</button>
+      <button id="btn-driving-intro-back" class="btn-secondary">돌아가기</button>
+    </div>
+  </section>
+
+  <!-- 차종 선택 -->
+  <section id="driving-screen-select-type" class="driving-screen">
+    <div class="slot-visual"><canvas id="driving-type-preview"></canvas></div>
+    <h2 class="slot-title">차를 선택하세요</h2>
+    <div class="slot-body">
+      <div class="type-grid" id="driving-type-grid">
+        <button class="type-btn" data-type="sedan"><canvas></canvas><span>승용차</span></button>
+        <button class="type-btn" data-type="compact"><canvas></canvas><span>소형차</span></button>
+        <button class="type-btn" data-type="truck"><canvas></canvas><span>트럭</span></button>
+        <button class="type-btn" data-type="bus"><canvas></canvas><span>버스</span></button>
+        <button class="type-btn" data-type="moto"><canvas></canvas><span>오토바이</span></button>
+        <button class="type-btn" data-type="bike"><canvas></canvas><span>자전거</span></button>
+      </div>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-driving-type-next" class="cta">다음</button>
+    </div>
+  </section>
+
+  <!-- 색상 선택 -->
+  <section id="driving-screen-select-color" class="driving-screen">
+    <div class="slot-visual"><canvas id="driving-preview-canvas"></canvas></div>
+    <h2 class="slot-title">색상을 선택하세요</h2>
+    <div class="slot-body">
+      <div class="color-list" id="driving-color-list">
+        <button class="color-btn" data-color="blue"><span class="color-dot" style="background:#3B6FE0"></span>파랑</button>
+        <button class="color-btn" data-color="red"><span class="color-dot" style="background:#E24B4B"></span>빨강</button>
+        <button class="color-btn" data-color="yellow"><span class="color-dot" style="background:#F5C542"></span>노랑</button>
+        <button class="color-btn" data-color="white"><span class="color-dot" style="background:#FFFFFF"></span>흰색</button>
+      </div>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-driving-color-next" class="cta">다음</button>
+    </div>
+  </section>
+
+  <!-- TUTORIAL -->
+  <section id="driving-screen-tutorial" class="driving-screen">
+    <div class="slot-visual">
+      <div class="tut-lines">
+        <p><span class="key" data-k="up">↑</span> 전진</p>
+        <p><span class="key" data-k="down">↓</span> 브레이크</p>
+        <p><span class="key" data-k="left">←</span><span class="key" data-k="right">→</span> 핸들</p>
+      </div>
+    </div>
+    <h2 class="slot-title">안전하게 목적지까지 도착하세요</h2>
+    <div class="slot-body"></div>
+    <div class="slot-actions">
+      <button id="btn-driving-play" class="cta">시작하기</button>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section id="driving-screen-play" class="driving-screen">
+    <div class="topbar">
+      <span id="driving-play-status" class="status"></span>
+      <span id="driving-timer" class="timer">00:30</span>
+      <span id="driving-speed" class="status driving-speed-label">0 km/h</span>
+    </div>
+    <div id="driving-progress"><div id="driving-progress-fill"></div></div>
+    <div id="driving-stage">
+      <canvas id="driving-game-canvas"></canvas>
+      <div id="driving-hint" class="hint">방향키로 운전하세요</div>
+      <div id="driving-hit-flash" class="driving-hit-flash">쾅!</div>
+    </div>
+    <div id="driving-dpad">
+      <div class="dpad-grid">
+        <button class="dpad-btn" data-dir="up" aria-label="전진">▲</button>
+        <button class="dpad-btn" data-dir="left" aria-label="핸들 왼쪽">◀</button>
+        <button class="dpad-btn" data-dir="right" aria-label="핸들 오른쪽">▶</button>
+        <button class="dpad-btn" data-dir="down" aria-label="브레이크">▼</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="driving-screen-result" class="driving-screen scrollable">
+    <div class="slot-visual">
+      <canvas id="driving-result-canvas"></canvas>
+      <span id="driving-result-vehicle" class="result-vehicle"></span>
+    </div>
+    <div class="slot-title result-head">
+      <div id="driving-result-stage" class="challenge-name">STAGE 1</div>
+      <div id="driving-result-score" class="result-score">0<span class="unit">점</span></div>
+      <span id="driving-result-newrecord" class="hidden">신기록</span>
+      <div id="driving-result-best" class="hidden"></div>
+      <div id="driving-result-grade" class="result-grade"></div>
+      <div id="driving-result-allclear" class="result-comment hidden">모든 스테이지 완료</div>
+      <div id="driving-result-comment" class="result-comment"></div>
+      <div id="driving-records" class="driving-records"></div>
+    </div>
+    <div class="slot-body">
+      <div id="driving-subscores" class="subscores"></div>
+    </div>
+    <div class="slot-actions">
+      <!-- §24: "다음 스테이지"가 있으면 그것이 최우선 액션(cta, 검정). 없으면(마지막 스테이지
+           완료 또는 실패) "다시 하기"가 그 자리를 대신해 cta로 격상된다(result-ui.js가 전환). -->
+      <button id="btn-driving-next-stage" class="cta hidden">다음 스테이지</button>
+      <button id="btn-driving-result-home" class="cta hidden">메인으로</button>
+      <div class="btn-row">
+        <button id="btn-driving-retry" class="btn-secondary">다시 하기</button>
+        <button id="btn-driving-change-car" class="btn-secondary">차 바꾸기</button>
+      </div>
+      <button id="btn-driving-battle-result" class="cta hidden">대결 결과 보기</button>
+      <button id="btn-driving-challenge" class="btn-secondary">친구에게 도전장 보내기</button>
+      <div class="btn-row">
+        <button id="btn-driving-save-img" class="btn-secondary">이미지 저장</button>
+        <button id="btn-driving-share" class="btn-secondary">공유하기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHALLENGE (도전장 링크로 진입) -->
+  <section id="driving-screen-challenge" class="driving-screen">
+    <div class="slot-visual"><canvas id="driving-challenge-canvas"></canvas></div>
+    <h2 class="slot-title">도전장이 도착했습니다</h2>
+    <div class="slot-body challenge-body">
+      <p id="driving-challenge-name" class="challenge-name">친구의 도로주행 기록</p>
+      <p id="driving-challenge-stage" class="challenge-name">STAGE 1</p>
+      <div id="driving-challenge-score" class="result-score">0<span class="unit">점</span></div>
+      <p class="battle-hint">이길 수 있으면 해보세요.</p>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-driving-challenge-start" class="cta">도전 시작</button>
+    </div>
+  </section>
+
+  <!-- BATTLE RESULT -->
+  <section id="driving-screen-battle-result" class="driving-screen scrollable">
+    <div class="slot-visual vs-visual">
+      <div class="vs-fig"><div class="vs-canvas-box"><canvas id="driving-vs-a-canvas"></canvas></div><span id="driving-vs-a-name" class="vs-name"></span></div>
+      <span class="vs-mid">VS</span>
+      <div class="vs-fig"><div class="vs-canvas-box"><canvas id="driving-vs-b-canvas"></canvas></div><span id="driving-vs-b-name" class="vs-name"></span></div>
+    </div>
+    <div class="slot-title vs-scores"><span id="driving-vs-a-score">0</span><span class="vs-sep">VS</span><span id="driving-vs-b-score">0</span></div>
+    <div class="slot-body">
+      <p id="driving-vs-winner" class="vs-winner"></p>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-driving-rematch" class="cta">다시 붙기</button>
+      <button id="btn-driving-vs-detail" class="btn-secondary">내 결과 자세히 보기</button>
+    </div>
+  </section>
+
+  <!-- §38: 다음 스테이지/재시도 진입 시 잠깐 보여주는 스테이지 라벨 오버레이 -->
+  <div id="driving-transition" class="driving-transition"></div>
+
+</div>
+
+<!-- 주차하기 베타: 완전히 분리된 루트(#parkingbeta-root). 기존 주차게임(#app)과 동일한
+     컴포넌트 클래스(slot-visual/slot-title/cta/type-grid/color-list/topbar/dpad/result-*)를
+     그대로 재사용하되, 차량 물리·채점·렌더링도 전부 PK.physics/PK.scoring/PK.renderer를
+     읽기 전용으로 그대로 부른다(src/parkingbeta/*.js). 기존 주차게임 파일은 이 블록에서도
+     전혀 수정하지 않는다. 도전장/대결 기능은 이번 베타 범위 밖이라 CHALLENGE/BATTLE_RESULT
+     화면은 만들지 않았다. -->
+<div id="parkingbeta-root" class="game-select-root hidden">
+
+  <!-- INTRO -->
+  <section id="parkingbeta-screen-intro" class="parkingbeta-screen active">
+    <div class="slot-visual"><canvas id="parkingbeta-intro-canvas"></canvas></div>
+    <h1 class="slot-title main">한 번에 주차하세요</h1>
+    <div class="slot-actions">
+      <button id="btn-parkingbeta-intro-start" class="cta">시작하기</button>
+      <button id="btn-parkingbeta-intro-back" class="btn-secondary">돌아가기</button>
+    </div>
+  </section>
+
+  <!-- 차 종류 선택 -->
+  <section id="parkingbeta-screen-select-type" class="parkingbeta-screen">
+    <div class="slot-visual"><canvas id="parkingbeta-type-preview"></canvas></div>
+    <h2 class="slot-title">차를 선택하세요</h2>
+    <div class="slot-body">
+      <div class="type-grid" id="parkingbeta-type-grid">
+        <button class="type-btn" data-type="sedan"><canvas></canvas><span>승용차</span></button>
+        <button class="type-btn" data-type="compact"><canvas></canvas><span>소형차</span></button>
+        <button class="type-btn" data-type="truck"><canvas></canvas><span>트럭</span></button>
+        <button class="type-btn" data-type="bus"><canvas></canvas><span>버스</span></button>
+        <button class="type-btn" data-type="moto"><canvas></canvas><span>오토바이</span></button>
+        <button class="type-btn" data-type="bike"><canvas></canvas><span>자전거</span></button>
+      </div>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-parkingbeta-type-next" class="cta">다음</button>
+    </div>
+  </section>
+
+  <!-- 차 색상 선택 -->
+  <section id="parkingbeta-screen-select-color" class="parkingbeta-screen">
+    <div class="slot-visual"><canvas id="parkingbeta-preview-canvas"></canvas></div>
+    <h2 class="slot-title">색상을 선택하세요</h2>
+    <div class="slot-body">
+      <div class="color-list" id="parkingbeta-color-list">
+        <button class="color-btn" data-color="blue"><span class="color-dot" style="background:#3B6FE0"></span>파랑</button>
+        <button class="color-btn" data-color="red"><span class="color-dot" style="background:#E24B4B"></span>빨강</button>
+        <button class="color-btn" data-color="yellow"><span class="color-dot" style="background:#F5C542"></span>노랑</button>
+        <button class="color-btn" data-color="white"><span class="color-dot" style="background:#FFFFFF"></span>흰색</button>
+      </div>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-parkingbeta-color-next" class="cta">다음</button>
+    </div>
+  </section>
+
+  <!-- TUTORIAL -->
+  <section id="parkingbeta-screen-tutorial" class="parkingbeta-screen">
+    <div class="slot-visual">
+      <div class="tut-lines">
+        <p><span class="key" data-k="up">↑</span> 전진</p>
+        <p><span class="key" data-k="down">↓</span> 브레이크 / 후진</p>
+        <p><span class="key" data-k="left">←</span><span class="key" data-k="right">→</span> 핸들</p>
+      </div>
+    </div>
+    <h2 class="slot-title">빈칸에 후면으로 주차하세요</h2>
+    <div class="slot-body"><p class="battle-hint">스테이지가 올라갈수록 주차칸이 더 좁아집니다</p></div>
+    <div class="slot-actions">
+      <button id="btn-parkingbeta-play" class="cta">시작하기</button>
+    </div>
+  </section>
+
+  <!-- PLAY -->
+  <section id="parkingbeta-screen-play" class="parkingbeta-screen">
+    <div class="topbar">
+      <span id="parkingbeta-play-status" class="status"></span>
+      <span id="parkingbeta-timer" class="timer">00:30</span>
+      <span id="parkingbeta-gear" class="gear">R</span>
+    </div>
+    <div id="parkingbeta-stage">
+      <canvas id="parkingbeta-game-canvas"></canvas>
+      <div id="parkingbeta-hint" class="hint">방향키로 운전하세요</div>
+    </div>
+    <div id="parkingbeta-dpad">
+      <div class="dpad-grid">
+        <button class="dpad-btn" data-dir="up" aria-label="전진">▲</button>
+        <button class="dpad-btn" data-dir="left" aria-label="핸들 왼쪽">◀</button>
+        <button class="dpad-btn" data-dir="right" aria-label="핸들 오른쪽">▶</button>
+        <button class="dpad-btn" data-dir="down" aria-label="브레이크 / 후진">▼</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="parkingbeta-screen-result" class="parkingbeta-screen scrollable">
+    <div class="slot-visual">
+      <canvas id="parkingbeta-result-canvas"></canvas>
+      <span id="parkingbeta-result-vehicle" class="result-vehicle"></span>
+    </div>
+    <div class="slot-title result-head">
+      <div id="parkingbeta-result-stage" class="challenge-name">STAGE 1</div>
+      <div id="parkingbeta-result-score" class="result-score">0<span class="unit">점</span></div>
+      <span id="parkingbeta-result-newrecord" class="hidden">신기록</span>
+      <div id="parkingbeta-result-best" class="hidden"></div>
+      <div id="parkingbeta-result-grade" class="result-grade"></div>
+      <div id="parkingbeta-result-allclear" class="result-comment hidden">모든 스테이지 완료</div>
+      <div id="parkingbeta-result-comment" class="result-comment"></div>
+      <div id="parkingbeta-records" class="parkingbeta-records"></div>
+    </div>
+    <div class="slot-body">
+      <div id="parkingbeta-subscores" class="subscores"></div>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-parkingbeta-next-stage" class="cta hidden">다음 스테이지</button>
+      <button id="btn-parkingbeta-result-home" class="cta hidden">메인으로</button>
+      <div class="btn-row">
+        <button id="btn-parkingbeta-retry" class="btn-secondary">다시 하기</button>
+        <button id="btn-parkingbeta-change-car" class="btn-secondary">차 바꾸기</button>
+      </div>
+      <button id="btn-parkingbeta-battle-result" class="cta hidden">대결 결과 보기</button>
+      <button id="btn-parkingbeta-challenge" class="btn-secondary">친구에게 도전장 보내기</button>
+    </div>
+  </section>
+
+  <!-- CHALLENGE (도전장 링크로 진입) -->
+  <section id="parkingbeta-screen-challenge" class="parkingbeta-screen">
+    <div class="slot-visual"><canvas id="parkingbeta-challenge-canvas"></canvas></div>
+    <h2 class="slot-title">도전장이 도착했습니다</h2>
+    <div class="slot-body challenge-body">
+      <p id="parkingbeta-challenge-name" class="challenge-name">친구의 주차 기록</p>
+      <p id="parkingbeta-challenge-stage" class="challenge-name">STAGE 1</p>
+      <div id="parkingbeta-challenge-score" class="result-score">0<span class="unit">점</span></div>
+      <p class="battle-hint">이길 수 있으면 해보세요.</p>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-parkingbeta-challenge-start" class="cta">도전 시작</button>
+    </div>
+  </section>
+
+  <!-- BATTLE RESULT -->
+  <section id="parkingbeta-screen-battle-result" class="parkingbeta-screen scrollable">
+    <div class="slot-visual vs-visual">
+      <div class="vs-fig"><div class="vs-canvas-box"><canvas id="parkingbeta-vs-a-canvas"></canvas></div><span id="parkingbeta-vs-a-name" class="vs-name"></span></div>
+      <span class="vs-mid">VS</span>
+      <div class="vs-fig"><div class="vs-canvas-box"><canvas id="parkingbeta-vs-b-canvas"></canvas></div><span id="parkingbeta-vs-b-name" class="vs-name"></span></div>
+    </div>
+    <div class="slot-title vs-scores"><span id="parkingbeta-vs-a-score">0</span><span class="vs-sep">VS</span><span id="parkingbeta-vs-b-score">0</span></div>
+    <div class="slot-body">
+      <p id="parkingbeta-vs-winner" class="vs-winner"></p>
+    </div>
+    <div class="slot-actions">
+      <button id="btn-parkingbeta-rematch" class="cta">다시 붙기</button>
+      <button id="btn-parkingbeta-vs-detail" class="btn-secondary">내 결과 자세히 보기</button>
+    </div>
+  </section>
+
+  <div id="parkingbeta-transition" class="parkingbeta-transition"></div>
+
+</div>
+
+<!-- 도로주행 닉네임 입력 -->
+<div id="driving-modal" class="modal hidden">
+  <div class="modal-card">
+    <p class="modal-title">도전장에 적을 닉네임</p>
+    <input id="driving-modal-input" type="text" maxlength="12" placeholder="예: 운전왕">
+    <div class="btn-row">
+      <button id="driving-modal-cancel" class="btn-secondary">취소</button>
+      <button id="driving-modal-ok" class="cta">확인</button>
+    </div>
+  </div>
+</div>
+
+<div id="driving-toast" class="toast"></div>
+
 <!-- 닉네임 입력 -->
 <div id="modal" class="modal hidden">
   <div class="modal-card">
@@ -170,6 +549,20 @@
 
 <div id="toast" class="toast"></div>
 
+<div id="parkingbeta-toast" class="toast"></div>
+
+<!-- 베타 도전장 닉네임 입력(전용 모달 — 공용 #modal은 beta.html 독립 페이지엔 없어 쓸 수 없다) -->
+<div id="parkingbeta-modal" class="modal hidden">
+  <div class="modal-card">
+    <p class="modal-title">도전장에 적을 닉네임</p>
+    <input id="parkingbeta-modal-input" type="text" maxlength="12" placeholder="예: 주차왕">
+    <div class="btn-row">
+      <button id="parkingbeta-modal-cancel" class="btn-secondary">취소</button>
+      <button id="parkingbeta-modal-ok" class="cta">확인</button>
+    </div>
+  </div>
+</div>
+
 <script src="src/game/config.js?v=202609211141"></script>
 <script src="src/game/state.js?v=202609211141"></script>
 <script src="src/game/physics.js?v=202609211141"></script>
@@ -183,5 +576,39 @@
 <script src="src/game/play.js?v=202609211141"></script>
 <script src="src/game/result-ui.js?v=202609211141"></script>
 <script src="src/main.js?v=202609211141"></script>
+<script src="src/driving/config.js?v=202610020007"></script>
+<script src="src/driving/road-bg-data.js?v=202610020007"></script>
+<script src="src/driving/road-template.js?v=202610020007"></script>
+<!-- 2026-09-29 신규 모듈형 맵 시스템(road-assets → road-segments → map-renderer 순서로
+     로드되어야 함). 위 두 줄(road-bg-data.js/road-template.js)은 레거시 — 그대로 유지. -->
+<script src="src/driving/road-assets.js?v=202610020007"></script>
+<script src="src/driving/road-segments.js?v=202610020007"></script>
+<script src="src/driving/map-renderer.js?v=202610020007"></script>
+<script src="src/driving/state.js?v=202610020007"></script>
+<script src="src/driving/stages.js?v=202610020007"></script>
+<script src="src/driving/physics.js?v=202610020007"></script>
+<script src="src/driving/obstacles.js?v=202610020007"></script>
+<script src="src/driving/renderer.js?v=202610020007"></script>
+<script src="src/driving/scoring.js?v=202610020007"></script>
+<script src="src/driving/progress.js?v=202610020007"></script>
+<script src="src/driving/battle.js?v=202610020007"></script>
+<script src="src/driving/share.js?v=202610020007"></script>
+<script src="src/driving/input.js?v=202610020007"></script>
+<script src="src/driving/play.js?v=202610020007"></script>
+<script src="src/driving/result-ui.js?v=202610020007"></script>
+<script src="src/driving/main.js?v=202610020007"></script>
+<script src="src/parkingbeta/config.js?v=202610280012"></script>
+<script src="src/parkingbeta/layout.js?v=202610280012"></script>
+<script src="src/parkingbeta/scoring.js?v=202610280012"></script>
+<script src="src/parkingbeta/state.js?v=202610280012"></script>
+<script src="src/parkingbeta/input.js?v=202610280012"></script>
+<script src="src/parkingbeta/progress.js?v=202610280012"></script>
+<script src="src/parkingbeta/renderer.js?v=202610280012"></script>
+<script src="src/parkingbeta/play.js?v=202610280012"></script>
+<script src="src/parkingbeta/share.js?v=202610280012"></script>
+<script src="src/parkingbeta/battle.js?v=202610280012"></script>
+<script src="src/parkingbeta/result-ui.js?v=202610280012"></script>
+<script src="src/parkingbeta/main.js?v=202610280012"></script>
+<script src="src/menu/game-select.js?v=202609230001"></script>
 </body>
 </html>

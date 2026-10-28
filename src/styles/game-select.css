@@ -1,0 +1,89 @@
+/* 주차하기 — GAME SELECT (상위 진입 화면)
+ * src/styles/main.css는 건드리지 않는다. 새 디자인 시스템을 만들지 않기 위해,
+ * main.css가 정의한 :root 토큰(--app-max-width · --content-width · --screen-top 등)과
+ * .slot-visual / .slot-title / .slot-actions / .cta 컴포넌트 클래스를 그대로 재사용하고,
+ * 여기서는 기존 컴포넌트로 표현할 수 없는 "게임 목록 아이템" 하나만 최소로 추가한다.
+ * body/button/img 같은 전역 태그 셀렉터는 추가하지 않는다. */
+
+.game-select-root {
+  position: relative;
+  width: 100%;
+  max-width: var(--app-max-width);
+  height: 100vh;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* .screen과 같은 프레임(위치·정렬·패딩 토큰)이지만, class="screen"을 그대로 쓰면
+ * state.js가 모든 .screen을 순회하며 active를 지워버려 기존 상태머신과 충돌한다 —
+ * 그래서 이름만 다르고 규칙은 .screen과 동일하게 맞춘다. */
+.game-select {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--screen-top) 20px var(--screen-bottom);
+}
+.game-select.active { display: flex; }
+
+/* 2026-09-28: 카드 2장이 각각 기존 INTRO 화면(비주얼 200px + 타이틀)만큼의 실제 콘텐츠를
+ * 담게 되면서, 기존 "위:아래 1:2 스페이서로 중앙보다 살짝 위에 띄우기"(단일 비주얼+CTA 화면용
+ * 리듬)는 공간이 부족해진다 — 제목만 위에 두고 카드 목록이 나머지 공간을 쓰도록 단순 상단
+ * 정렬로 바꾼다. */
+.game-select { justify-content: flex-start; }
+.game-select .slot-title { min-height: 37px; }
+
+/* ---------- GAME SELECT 카드 목록: 각 카드 = 기존 INTRO 화면의 비주얼+메인카피를 그대로 옮긴
+ * 구성(§1~3). 시작하기 버튼 없이 카드 전체가 클릭 영역이다(§4). 축소 아이콘이 아니라 기존
+ * --preview-height(200px)에 가깝게(150px, 두 장이 들어가야 해서만 살짝 줄임 — §6 "너무 작게
+ * 줄이지 말 것") 유지한다. */
+.game-select__list {
+  width: 100%;
+  max-width: var(--content-width);
+  margin-top: var(--gap-title-content);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+.game-select__card {
+  width: 100%;
+  padding: 0;
+  background: #FFFFFF;
+  color: var(--text);
+  border: 1px solid #000000;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+.game-select__card:active { background: #F2F2F2; }
+.game-select__visual {
+  width: 100%;
+  height: 150px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.game-select__visual > canvas { display: block; width: 100%; height: 100%; }
+.game-select__copy {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+}
+
+@media (max-height: 700px) {
+  .game-select__visual { height: 118px; }
+  .game-select__copy { font-size: 18px; padding: 10px 14px; }
+}

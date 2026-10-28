@@ -1,0 +1,127 @@
+/* 도로주행 — 전용 스타일
+ * src/styles/main.css는 건드리지 않는다. 새 디자인 시스템을 만들지 않기 위해 main.css의
+ * :root 토큰과 .slot-visual/.slot-title/.slot-body/.slot-actions/.cta/.btn-secondary/
+ * .btn-row/.type-grid/.type-btn/.color-list/.color-btn/.tut-lines/.key/.topbar/.dpad-grid/
+ * .dpad-btn/.hint/.result-.../.challenge-.../.vs-.../.modal.../.toast 클래스를 전부 그대로 재사용한다.
+ * 여기서는 (1) 주차게임 state.js와 충돌하는 .screen 대신 쓰는 .driving-screen 프레임과
+ * (2) 도로주행에만 있는 스테이지 목록/기록 칩만 최소로 추가한다.
+ * #driving-root는 game-select.css의 .game-select-root(430px 프레임)를 그대로 재사용한다. */
+
+/* ---------- .screen과 동일한 규칙, 이름만 다름(§11: .screen 클래스 사용 금지) ---------- */
+.driving-screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--screen-top) 20px var(--screen-bottom);
+}
+.driving-screen.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity .16s ease, transform .16s ease;
+}
+.driving-screen.active.entering { opacity: 0; transform: translateY(4px); }
+.driving-screen.scrollable { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+/* ---------- "보여주는 화면"(INTRO·TUTORIAL) — main.css #screen-intro,#screen-tutorial과 같은 규칙 ---------- */
+#driving-screen-intro, #driving-screen-tutorial { justify-content: flex-start; }
+#driving-screen-intro::before, #driving-screen-tutorial::before { content: ""; flex: 1 0 0; }
+#driving-screen-intro::after, #driving-screen-tutorial::after { content: ""; flex: 2 0 0; }
+#driving-screen-intro .slot-title, #driving-screen-tutorial .slot-title { min-height: 37px; }
+
+/* ---------- "고르는 화면"(차종·색상) — 본문 높이를 통일해 CTA가 같은 y에 오게 ---------- */
+#driving-screen-select-type .slot-body,
+#driving-screen-select-color .slot-body { min-height: var(--select-body-height); }
+
+/* ---------- PLAY — main.css #screen-play/#stage/#game-canvas/#dpad와 같은 규칙 ---------- */
+#driving-screen-play { padding: 0; align-items: stretch; }
+/* §8: main.css .topbar는 column-gap이 없어(주차게임은 gear 아이콘까지 3칸이 짧아 문제
+ * 없었음) 320px처럼 좁은 화면에서 timer와 speed 사이 간격이 거의 없어 붙어 보였다 —
+ * main.css는 건드리지 않고 이 화면에서만 더 구체적인 선택자로 여백을 더한다. */
+#driving-screen-play .topbar { column-gap: 10px; }
+.driving-speed-label { font-variant-numeric: tabular-nums; }
+@media (max-width: 340px) {
+  #driving-screen-play .topbar .timer { font-size: 26px; }
+}
+/* 진행률 표시(§7 "앞으로 얼마나 더 달려야 하는지 알기 어렵다") — 얇은 한 줄만, 장식 없음.
+ * 실제 주행 거리/결승선 거리 비율로 width만 갱신한다(play.js). */
+#driving-progress { height: 3px; background: #EEEEEE; flex-shrink: 0; }
+#driving-progress-fill { height: 100%; width: 0%; background: #444444; transition: width 0.1s linear; }
+#driving-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  touch-action: none;
+  padding: 12px 12px 10px;
+}
+#driving-game-canvas { display: block; touch-action: none; }
+/* .hint(main.css)는 top:0으로 재사용되는데, 도로주행 플레이 화면에서는 타이머 바로 아래
+ * 여백 없이 붙어 보일 수 있어 살짝 내려서(§21) 캔버스 안쪽에 여유를 둔다. */
+#driving-screen-play #driving-hint { top: 8px; }
+#driving-dpad { display: none; flex-shrink: 0; padding: 8px 0 14px; touch-action: none; justify-content: center; }
+body.touch #driving-dpad { display: flex; }
+
+/* 충돌 피드백(§2) — 카메라(world transform)는 절대 건드리지 않고 DOM 오버레이/CSS 애니메이션만
+ * 쓴다. 화면 흔들림도 캔버스 엘리먼트 자체를 아주 살짝 transform으로 흔드는 것뿐, 실제 world
+ * 좌표 렌더링에는 영향 없음(카메라 좌우 고정 요구사항과 무관). */
+#driving-hit-flash {
+  position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%) scale(0.7);
+  font-weight: 800; font-size: 30px; color: #FFFFFF;
+  text-shadow: 0 0 6px rgba(0,0,0,0.6), 0 2px 0 rgba(0,0,0,0.5);
+  opacity: 0; pointer-events: none; z-index: 5;
+  transition: opacity 0.12s ease-out, transform 0.12s ease-out;
+}
+#driving-hit-flash.show { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+#driving-hit-flash.hard { color: #FFD23F; font-size: 36px; }
+@keyframes driving-shake {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-3px, 2px); }
+  40% { transform: translate(3px, -2px); }
+  60% { transform: translate(-2px, -2px); }
+  80% { transform: translate(2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+#driving-game-canvas.hit-shake { animation: driving-shake 0.22s ease-in-out; }
+
+/* ---------- RESULT: 세부 기록 칩(§66, 최대 3개) ---------- */
+.driving-records {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.driving-record {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--soft-border);
+  border-radius: 2px;
+  padding: 3px 8px;
+}
+.driving-records:empty { display: none; }
+/* 2026-10-02: 잘한 점 칩(§5 — scoring.js bestAspect)은 감점 칩과 색으로 구분 */
+.driving-record--good { color: #1A7A3C; border-color: #1A7A3C; }
+/* 신기록 배지 — 점수 바로 옆, 작게 */
+#driving-result-newrecord {
+  display: inline-block; margin-left: 6px; font-size: 12px; font-weight: 700;
+  color: #1A7A3C; border: 1px solid #1A7A3C; border-radius: 2px; padding: 2px 6px; vertical-align: middle;
+}
+#driving-result-newrecord.hidden { display: none; }
+#driving-result-best { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* ---------- §38 스테이지 전환 라벨(화려한 전환 없이, 짧게 페이드) ---------- */
+.driving-transition {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  background: #FFFFFF;
+  font-size: 26px; font-weight: 800; color: #000000;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+.driving-transition.show { opacity: 1; }

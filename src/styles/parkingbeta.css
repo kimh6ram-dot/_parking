@@ -1,0 +1,102 @@
+/* 주차하기 베타 전용 스타일 — 기존 main.css(slot-visual, type-grid, color-list,
+ * subscore-row, result-score 등)는 ID로 범위가 묶여있지 않은 범용 컴포넌트라 그대로
+ * 재사용된다(도로주행이 driving.css에서 쓴 것과 같은 패턴). screen만은 예외 —
+ * state.js가 서로 다른 전환 로직을 쓰므로 주차게임/도로주행처럼 이름을 분리한
+ * parkingbeta-screen을 따로 정의해야 한다(section 11: screen 클래스 공유 금지, driving.css의
+ * driving-screen과 동일 규칙). 여기서는 그 규칙과, 기존 클래스로 표현 안 되는 것만 추가한다.
+ * main.css, driving.css는 건드리지 않는다. */
+
+/* ---------- 프레임(독립 페이지 beta.html용) — game-select.css의 .game-select-root와
+ * 완전히 동일한 규칙. beta.html은 메뉴가 없어 game-select.css를 아예 불러오지 않으므로,
+ * #parkingbeta-root가 쓰는 .game-select-root를 여기서도 정의해 이 CSS 파일 하나로 독립
+ * 페이지가 완결되게 한다(index.html에 내장된 경우는 game-select.css가 이미 같은 규칙을
+ * 정의하므로 단순히 중복 적용될 뿐 충돌 없음). ---------- */
+.game-select-root {
+  position: relative;
+  width: 100%;
+  max-width: var(--app-max-width);
+  height: 100vh;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ---------- .screen과 동일한 규칙, 이름만 다름(§11: .screen 클래스 사용 금지) ---------- */
+.parkingbeta-screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--screen-top) 20px var(--screen-bottom);
+}
+.parkingbeta-screen.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity .16s ease, transform .16s ease;
+}
+.parkingbeta-screen.active.entering { opacity: 0; transform: translateY(4px); }
+.parkingbeta-screen.scrollable { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+#parkingbeta-screen-intro, #parkingbeta-screen-tutorial { justify-content: flex-start; }
+#parkingbeta-screen-intro::before, #parkingbeta-screen-tutorial::before { content: ""; flex: 1 0 0; }
+#parkingbeta-screen-intro::after, #parkingbeta-screen-tutorial::after { content: ""; flex: 2 0 0; }
+#parkingbeta-screen-intro .slot-title, #parkingbeta-screen-tutorial .slot-title { min-height: 37px; }
+
+#parkingbeta-screen-select-type .slot-body,
+#parkingbeta-screen-select-color .slot-body { min-height: var(--select-body-height); }
+
+#parkingbeta-screen-play { padding: 0; align-items: stretch; }
+#parkingbeta-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  touch-action: none;
+  padding: 12px 12px 10px;
+}
+#parkingbeta-game-canvas { display: block; touch-action: none; }
+#parkingbeta-dpad { display: none; flex-shrink: 0; padding: 8px 0 14px; touch-action: none; justify-content: center; }
+body.touch #parkingbeta-dpad { display: flex; }
+
+/* ---------- RESULT: 세부 기록 칩 ---------- */
+.parkingbeta-records {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.parkingbeta-record {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--soft-border);
+  border-radius: 2px;
+  padding: 3px 8px;
+}
+.parkingbeta-records:empty { display: none; }
+.parkingbeta-record--good { color: #1A7A3C; border-color: #1A7A3C; }
+
+/* 신기록 배지 / 최고 기록 한 줄 */
+#parkingbeta-result-newrecord {
+  display: inline-block; margin-left: 6px; font-size: 12px; font-weight: 700;
+  color: #1A7A3C; border: 1px solid #1A7A3C; border-radius: 2px; padding: 2px 6px; vertical-align: middle;
+}
+#parkingbeta-result-newrecord.hidden { display: none; }
+#parkingbeta-result-best { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* ---------- 스테이지 전환 라벨(화려한 전환 없이, 짧게 페이드) ---------- */
+.parkingbeta-transition {
+  position: absolute; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  background: #FFFFFF;
+  font-size: 26px; font-weight: 800; color: #000000;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+.parkingbeta-transition.show { opacity: 1; }
