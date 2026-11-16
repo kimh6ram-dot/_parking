@@ -154,6 +154,16 @@
     {id:'will-you-date-me', label:'나랑 데이트 할래?', maker:'하람', created:'2026-06-12T04:07:32Z', owner:'kimh6ram-dot', repo:'will-you-date-me'}
   ].sort((a,b)=>new Date(b.created)-new Date(a.created));
 
+  function isExcludedProject(p){
+    const hay=[p && p.id,p && p.repo,p && p.path,p && p.label]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return hay.includes('dorea-values-archive-church-planting') || hay.includes('dorea');
+  }
+
+  projects = projects.filter(p=>!isExcludedProject(p));
+
   const nf = new Intl.NumberFormat('ko-KR');
   const $ = s => document.querySelector(s);
 
@@ -341,8 +351,9 @@
       }
     }catch(_){}
 
-    if(!discovered.length) return;
-    projects=[...projects,...discovered].sort((a,b)=>new Date(b.created)-new Date(a.created));
+    const cleanDiscovered = discovered.filter(p=>!isExcludedProject(p));
+    if(!cleanDiscovered.length) return;
+    projects=[...projects,...cleanDiscovered].filter(p=>!isExcludedProject(p)).sort((a,b)=>new Date(b.created)-new Date(a.created));
     $('#grid').innerHTML = projects.map(cardTemplate).join('');
     $('#siteCount').textContent = nf.format(projects.length);
     await refresh();
