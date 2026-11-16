@@ -287,7 +287,7 @@
       });
       if(r.ok){
         const repos = await r.json();
-        const ignored = new Set(['_parking','kimharam','ccojik']);
+        const ignored = new Set(['_parking','kimharam','ccojik','DOREA-Values-Archive-Church-Planting']);
         for(const repo of repos){
           if(!repo || repo.fork || repo.has_pages !== true || ignored.has(repo.name) || knownIds.has(repo.name)) continue;
           const title = await fetchProjectTitle('kimh6ram-dot',repo.name,repo.default_branch || 'main','');
